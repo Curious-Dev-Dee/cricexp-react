@@ -17,82 +17,97 @@ export default function GlobalTournament({ user }) {
 
   useEffect(() => { fetchAll() }, [slug])
 
- const fetchAll = async () => {
-  setLoading(true)
+  const fetchAll = async () => {
+    setLoading(true)
 
-  // 1. Get tournament by slug
-  const { data: t } = await supabase
-    .from('global_tournaments')
-    .select('*')
-    .eq('slug', slug)
-    .single()
-  setTournament(t)
+    const { data: t } = await supabase
+      .from('global_tournaments')
+      .select('*')
+      .eq('slug', slug)
+      .single()
+    setTournament(t)
+    if (!t) { setLoading(false); return }
 
-  if (!t) { setLoading(false); return }
+    // Step 1: get points
+    const { data: pts } = await supabase
+      .from('user_tournament_points')
+      .select('user_id, total_points, matches_counted, previous_rank')
+      .eq('tournament_id', t.id)
+      .order('total_points', { ascending: false })
+      .limit(200)
 
-  // 2. Global leaderboard — directly join user_tournament_points + user_profiles
-  const { data: lb } = await supabase
-    .from('user_tournament_points')
-    .select(`
-      user_id,
-      total_points,
-      matches_counted,
-      previous_rank,
-      user_profiles (
-        full_name,
-        team_name,
-        team_photo_url
-      )
-    `)
-    .eq('tournament_id', t.id)
-    .order('total_points', { ascending: false })
-    .limit(200)
-  
-  // Attach rank manually
-  setLeaderboard((lb || []).map((r, i) => ({ ...r, rank: i + 1 })))
+    if (pts?.length) {
+      // Step 2: get profiles for those user_ids
+      const ids = pts.map(r => r.user_id)
+      const { data: profiles } = await supabase
+        .from('user_profiles')
+        .select('user_id, full_name, team_name, team_photo_url')
+        .in('user_id', ids)
 
-  // 3. Get leagues this user is in (leagues table uses invite_code not code)
-  const { data: lm } = await supabase
-    .from('league_members')
-    .select('league_id, leagues(id, name, invite_code)')
-    .eq('user_id', user.id)
-  setLeagues(lm?.map(m => m.leagues).filter(Boolean) || [])
+      const profileMap = {}
+      profiles?.forEach(p => { profileMap[p.user_id] = p })
 
-  setLoading(false)
-}
+      setLeaderboard(pts.map((r, i) => ({
+        ...r,
+        rank: i + 1,
+        full_name: profileMap[r.user_id]?.full_name || 'Unknown',
+        team_name: profileMap[r.user_id]?.team_name || '',
+        team_photo_url: profileMap[r.user_id]?.team_photo_url || null,
+      })))
+    } else {
+      setLeaderboard([])
+    }
+
+    // Leagues user is in
+    const { data: lm } = await supabase
+      .from('league_members')
+      .select('league_id, leagues(id, name, invite_code)')
+      .eq('user_id', user.id)
+    setLeagues(lm?.map(m => m.leagues).filter(Boolean) || [])
+
+    setLoading(false)
+  }
 
   const loadLeagueLeaderboard = async (leagueId) => {
-  setSelectedLeague(leagueId)
-  setPrivateLeaderboard([])
+    setSelectedLeague(leagueId)
+    setPrivateLeaderboard([])
 
-  // Get all members of this league
-  const { data: members } = await supabase
-    .from('league_members')
-    .select('user_id')
-    .eq('league_id', leagueId)
+    // Get members of this league
+    const { data: members } = await supabase
+      .from('league_members')
+      .select('user_id')
+      .eq('league_id', leagueId)
+    if (!members?.length) return
 
-  if (!members?.length) return
+    const userIds = members.map(m => m.user_id)
 
-  const userIds = members.map(m => m.user_id)
+    // Get their points for this tournament
+    const { data: pts } = await supabase
+      .from('user_tournament_points')
+      .select('user_id, total_points')
+      .eq('tournament_id', tournament.id)
+      .in('user_id', userIds)
+      .order('total_points', { ascending: false })
 
-  // Get their points for this tournament
-  const { data: pts } = await supabase
-    .from('user_tournament_points')
-    .select(`
-      user_id,
-      total_points,
-      user_profiles (
-        full_name,
-        team_name,
-        team_photo_url
-      )
-    `)
-    .eq('tournament_id', tournament.id)
-    .in('user_id', userIds)
-    .order('total_points', { ascending: false })
+    if (!pts?.length) return
 
-  setPrivateLeaderboard((pts || []).map((r, i) => ({ ...r, rank_in_league: i + 1 })))
-}
+    // Get profiles separately
+    const { data: profiles } = await supabase
+      .from('user_profiles')
+      .select('user_id, full_name, team_name, team_photo_url')
+      .in('user_id', userIds)
+
+    const profileMap = {}
+    profiles?.forEach(p => { profileMap[p.user_id] = p })
+
+    setPrivateLeaderboard(pts.map((r, i) => ({
+      ...r,
+      rank_in_league: i + 1,
+      full_name: profileMap[r.user_id]?.full_name || 'Unknown',
+      team_name: profileMap[r.user_id]?.team_name || '',
+      team_photo_url: profileMap[r.user_id]?.team_photo_url || null,
+    })))
+  }
 
   const medal = (i) => i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : null
 
@@ -121,18 +136,27 @@ export default function GlobalTournament({ user }) {
       </div>
       <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#2d2f3e', overflow: 'hidden', flexShrink: 0 }}>
         {row.team_photo_url && (
-          <img src={`${AVATAR_BASE}${row.team_photo_url || row.user_profiles?.team_photo_url}`} width={36} height={36}
+          <img
+            src={`${AVATAR_BASE}${row.team_photo_url}`}
+            width={36} height={36}
             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-            onError={e => e.target.style.display = 'none'} alt="" />
+            onError={e => e.target.style.display = 'none'}
+            alt=""
+          />
         )}
       </div>
       <div>
         <div style={{ fontSize: '13px', fontWeight: isMe ? 700 : 500, color: isMe ? '#6366f1' : 'white' }}>
-{row.full_name || row.user_profiles?.full_name || 'User'}
-
-          {isMe && <span style={{ fontSize: '10px', background: '#6366f1', color: 'white', padding: '1px 6px', borderRadius: '4px', marginLeft: '6px' }}>YOU</span>}
+          {row.full_name || 'User'}
+          {isMe && (
+            <span style={{ fontSize: '10px', background: '#6366f1', color: 'white', padding: '1px 6px', borderRadius: '4px', marginLeft: '6px' }}>
+              YOU
+            </span>
+          )}
         </div>
-        {row.team_name && <div style={{ fontSize: '11px', color: '#555', marginTop: '1px' }}>{row.team_name}</div>}
+        {row.team_name && (
+          <div style={{ fontSize: '11px', color: '#555', marginTop: '1px' }}>{row.team_name}</div>
+        )}
       </div>
       <div style={{ textAlign: 'right', fontSize: '15px', fontWeight: 700, color: '#22c55e' }}>
         {parseFloat(row[pointsField] || 0).toLocaleString()}
@@ -146,8 +170,10 @@ export default function GlobalTournament({ user }) {
       {/* Header */}
       <div style={{ background: '#1a1d2e', borderBottom: '1px solid #2d2f3e', padding: '16px 24px' }}>
         <div style={{ maxWidth: '960px', margin: '0 auto', display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <button onClick={() => navigate('/')}
-            style={{ background: '#2d2f3e', color: 'white', border: 'none', padding: '8px 14px', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>
+          <button
+            onClick={() => navigate('/')}
+            style={{ background: '#2d2f3e', color: 'white', border: 'none', padding: '8px 14px', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}
+          >
             ← Back
           </button>
           <div style={{ flex: 1 }}>
@@ -172,15 +198,18 @@ export default function GlobalTournament({ user }) {
         <div style={{ maxWidth: '960px', margin: '0 auto', display: 'flex' }}>
           {[
             { key: 'leaderboard', label: '🏆 Global Leaderboard' },
-            { key: 'leagues', label: `🔒 Private Leagues ${leagues.length ? `(${leagues.length})` : ''}` },
+            { key: 'leagues', label: `🔒 Private Leagues${leagues.length ? ` (${leagues.length})` : ''}` },
           ].map(t => (
-            <button key={t.key} onClick={() => setTab(t.key)}
+            <button
+              key={t.key}
+              onClick={() => setTab(t.key)}
               style={{
                 padding: '14px 20px', background: 'none', border: 'none', cursor: 'pointer',
                 color: tab === t.key ? '#6366f1' : '#888',
                 borderBottom: tab === t.key ? '2px solid #6366f1' : '2px solid transparent',
                 fontSize: '13px', fontFamily: 'sans-serif', transition: 'all 0.2s'
-              }}>
+              }}
+            >
               {t.label}
             </button>
           ))}
@@ -192,16 +221,21 @@ export default function GlobalTournament({ user }) {
         {/* GLOBAL LEADERBOARD */}
         {tab === 'leaderboard' && (
           <div>
-            {/* My rank banner */}
             {myEntry && (
-              <div style={{ background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.3)', borderRadius: '10px', padding: '14px 20px', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{
+                background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.3)',
+                borderRadius: '10px', padding: '14px 20px', marginBottom: '20px',
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+              }}>
                 <div>
                   <div style={{ fontSize: '11px', color: '#888', marginBottom: '2px' }}>Your Rank</div>
                   <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#6366f1' }}>#{myIdx + 1}</div>
                 </div>
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ fontSize: '11px', color: '#888', marginBottom: '2px' }}>Total Points</div>
-                  <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#22c55e' }}>{parseFloat(myEntry.total_points).toLocaleString()}</div>
+                  <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#22c55e' }}>
+                    {parseFloat(myEntry.total_points).toLocaleString()}
+                  </div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
                   <div style={{ fontSize: '11px', color: '#888', marginBottom: '2px' }}>Matches</div>
@@ -211,13 +245,25 @@ export default function GlobalTournament({ user }) {
             )}
 
             <div style={{ background: '#1a1d2e', borderRadius: '12px', overflow: 'hidden', border: '1px solid #2d2f3e' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '50px 44px 1fr 90px', gap: '8px', padding: '10px 16px', background: '#2d2f3e', fontSize: '11px', color: '#888', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                <span>Rank</span><span></span><span>Player</span><span style={{ textAlign: 'right' }}>Points</span>
+              <div style={{
+                display: 'grid', gridTemplateColumns: '50px 44px 1fr 90px',
+                gap: '8px', padding: '10px 16px', background: '#2d2f3e',
+                fontSize: '11px', color: '#888', textTransform: 'uppercase', letterSpacing: '0.5px'
+              }}>
+                <span>Rank</span>
+                <span></span>
+                <span>Player</span>
+                <span style={{ textAlign: 'right' }}>Points</span>
               </div>
               {leaderboard.length === 0
                 ? <div style={{ padding: '60px', textAlign: 'center', color: '#555', fontSize: '14px' }}>No leaderboard data found.</div>
                 : leaderboard.map((row, i) => (
-                  <LeaderboardRow key={row.user_id} row={row} index={i} isMe={row.user_id === user.id} />
+                  <LeaderboardRow
+                    key={row.user_id}
+                    row={row}
+                    index={i}
+                    isMe={row.user_id === user.id}
+                  />
                 ))
               }
             </div>
@@ -234,16 +280,19 @@ export default function GlobalTournament({ user }) {
               </div>
             ) : (
               <div>
+                {/* League selector pills */}
                 <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap' }}>
                   {leagues.map(league => (
-                    <button key={league.id}
+                    <button
+                      key={league.id}
                       onClick={() => loadLeagueLeaderboard(league.id)}
                       style={{
-                        padding: '8px 18px', borderRadius: '20px', fontSize: '13px', cursor: 'pointer',
-                        border: 'none', fontFamily: 'sans-serif',
+                        padding: '8px 18px', borderRadius: '20px', fontSize: '13px',
+                        cursor: 'pointer', border: 'none', fontFamily: 'sans-serif',
                         background: selectedLeague === league.id ? '#6366f1' : '#2d2f3e',
                         color: 'white', transition: 'background 0.2s'
-                      }}>
+                      }}
+                    >
                       {league.name}
                     </button>
                   ))}
@@ -257,8 +306,15 @@ export default function GlobalTournament({ user }) {
 
                 {selectedLeague && (
                   <div style={{ background: '#1a1d2e', borderRadius: '12px', overflow: 'hidden', border: '1px solid #2d2f3e' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '50px 44px 1fr 90px', gap: '8px', padding: '10px 16px', background: '#2d2f3e', fontSize: '11px', color: '#888', textTransform: 'uppercase' }}>
-                      <span>Rank</span><span></span><span>Player</span><span style={{ textAlign: 'right' }}>Points</span>
+                    <div style={{
+                      display: 'grid', gridTemplateColumns: '50px 44px 1fr 90px',
+                      gap: '8px', padding: '10px 16px', background: '#2d2f3e',
+                      fontSize: '11px', color: '#888', textTransform: 'uppercase'
+                    }}>
+                      <span>Rank</span>
+                      <span></span>
+                      <span>Player</span>
+                      <span style={{ textAlign: 'right' }}>Points</span>
                     </div>
                     {privateLeaderboard.length === 0
                       ? <div style={{ padding: '48px', textAlign: 'center', color: '#555' }}>No data for this league.</div>
@@ -278,6 +334,7 @@ export default function GlobalTournament({ user }) {
             )}
           </div>
         )}
+
       </div>
     </div>
   )
