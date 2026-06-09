@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 
 export default function Home({ user }) {
-  const [tournaments, setTournaments] = useState([])
+  const [globalTournaments, setGlobalTournaments] = useState([])
+  const [localTournaments, setLocalTournaments] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -10,11 +11,12 @@ export default function Home({ user }) {
   }, [])
 
   const fetchTournaments = async () => {
-    const { data } = await supabase
-      .from('global_tournaments')
-      .select('*')
-      .order('created_at', { ascending: false })
-    setTournaments(data || [])
+    const [global, local] = await Promise.all([
+      supabase.from('global_tournaments').select('*').order('start_date', { ascending: false }),
+      supabase.from('local_tournaments').select('*').order('start_date', { ascending: false })
+    ])
+    setGlobalTournaments(global.data || [])
+    setLocalTournaments(local.data || [])
     setLoading(false)
   }
 
@@ -22,11 +24,45 @@ export default function Home({ user }) {
     await supabase.auth.signOut()
   }
 
-  const getStatusColor = (status) => {
-    if (status === 'active') return '#22c55e'
-    if (status === 'upcoming') return '#f59e0b'
-    return '#6b7280'
+  const statusBadge = (status) => {
+    const colors = { active: '#22c55e', upcoming: '#f59e0b', completed: '#6b7280' }
+    return (
+      <span style={{ fontSize: '11px', padding: '3px 10px', borderRadius: '20px', background: '#2d2f3e', color: colors[status] || '#6b7280' }}>
+        {status}
+      </span>
+    )
   }
+
+  const TournamentCard = ({ t, type }) => (
+    <div style={{ background: '#1a1d2e', border: '1px solid #2d2f3e', borderRadius: '12px', padding: '20px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+        <span style={{ fontSize: '1.8rem' }}>{t.flag_emoji || (type === 'local' ? '🏏' : '🏆')}</span>
+        {statusBadge(t.status)}
+      </div>
+      <h3 style={{ margin: '0 0 4px', fontSize: '1rem' }}>{t.name}</h3>
+      <p style={{ color: '#888', fontSize: '13px', margin: '0 0 4px' }}>
+        {t.season} • {t.format} • {type === 'local' ? '📍 Local' : '🌍 Premier'}
+      </p>
+      <p style={{ color: '#555', fontSize: '12px', margin: '0 0 16px' }}>
+        {t.start_date} → {t.end_date}
+      </p>
+      <div style={{ display: 'flex', gap: '8px' }}>
+        <button style={{ flex: 1, background: '#2d2f3e', color: 'white', border: 'none', padding: '8px', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>
+          View
+        </button>
+        {t.has_fantasy && (
+          <button style={{ flex: 1, background: '#6366f1', color: 'white', border: 'none', padding: '8px', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>
+            Fantasy
+          </button>
+        )}
+        {t.has_live_scoring && type === 'local' && (
+          <button style={{ flex: 1, background: '#059669', color: 'white', border: 'none', padding: '8px', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>
+            Live
+          </button>
+        )}
+      </div>
+    </div>
+  )
 
   return (
     <div style={{ minHeight: '100vh', background: '#0f1117', color: 'white', fontFamily: 'sans-serif' }}>
@@ -45,38 +81,38 @@ export default function Home({ user }) {
 
       {/* Content */}
       <div style={{ maxWidth: '960px', margin: '0 auto', padding: '32px 24px' }}>
-        <h2 style={{ fontSize: '1.2rem', marginBottom: '8px' }}>Tournaments</h2>
-        <p style={{ color: '#888', marginBottom: '24px', fontSize: '14px' }}>All fantasy cricket tournaments</p>
-
         {loading ? (
-          <p style={{ color: '#888' }}>Loading...</p>
-        ) : tournaments.length === 0 ? (
-          <p style={{ color: '#888' }}>No tournaments yet.</p>
+          <p style={{ color: '#888' }}>Loading tournaments...</p>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
-            {tournaments.map(t => (
-              <div key={t.id} style={{ background: '#1a1d2e', border: '1px solid #2d2f3e', borderRadius: '12px', padding: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
-                  <span style={{ fontSize: '1.5rem' }}>{t.flag_emoji || '🏆'}</span>
-                  <span style={{ fontSize: '12px', background: '#2d2f3e', padding: '4px 10px', borderRadius: '20px', color: getStatusColor(t.status) }}>
-                    {t.status}
-                  </span>
+          <>
+            {/* Premier Leagues */}
+            <div style={{ marginBottom: '40px' }}>
+              <h2 style={{ fontSize: '1rem', color: '#888', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '16px' }}>
+                🌍 Premier Leagues
+              </h2>
+              {globalTournaments.length === 0 ? (
+                <p style={{ color: '#555', fontSize: '14px' }}>No premier leagues yet.</p>
+              ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
+                  {globalTournaments.map(t => <TournamentCard key={t.id} t={t} type="global" />)}
                 </div>
-                <h3 style={{ margin: '0 0 4px', fontSize: '1rem' }}>{t.name}</h3>
-                <p style={{ color: '#888', fontSize: '13px', margin: '0 0 16px' }}>{t.season} • {t.format}</p>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <button style={{ flex: 1, background: '#2d2f3e', color: 'white', border: 'none', padding: '8px', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>
-                    View
-                  </button>
-                  {t.has_fantasy && (
-                    <button style={{ flex: 1, background: '#6366f1', color: 'white', border: 'none', padding: '8px', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>
-                      Fantasy
-                    </button>
-                  )}
+              )}
+            </div>
+
+            {/* Local Tournaments */}
+            <div>
+              <h2 style={{ fontSize: '1rem', color: '#888', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '16px' }}>
+                📍 Local Tournaments
+              </h2>
+              {localTournaments.length === 0 ? (
+                <p style={{ color: '#555', fontSize: '14px' }}>No local tournaments yet.</p>
+              ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
+                  {localTournaments.map(t => <TournamentCard key={t.id} t={t} type="local" />)}
                 </div>
-              </div>
-            ))}
-          </div>
+              )}
+            </div>
+          </>
         )}
       </div>
     </div>
