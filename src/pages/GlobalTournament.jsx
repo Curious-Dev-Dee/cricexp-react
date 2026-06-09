@@ -17,71 +17,82 @@ export default function GlobalTournament({ user }) {
 
   useEffect(() => { fetchAll() }, [slug])
 
-  const fetchAll = async () => {
-    setLoading(true)
+ const fetchAll = async () => {
+  setLoading(true)
 
-    // 1. Get tournament
-    const { data: t } = await supabase
-      .from('global_tournaments').select('*').eq('slug', slug).single()
-    setTournament(t)
+  // 1. Get tournament by slug
+  const { data: t } = await supabase
+    .from('global_tournaments')
+    .select('*')
+    .eq('slug', slug)
+    .single()
+  setTournament(t)
 
-    // 2. Global leaderboard — fetch points then profiles separately
-    const { data: pts } = await supabase
-      .from('user_tournament_points')
-      .select('user_id, total_points, matches_counted, prediction_stars')
-      .eq('tournament_id', t?.id)
-      .order('total_points', { ascending: false })
-      .limit(100)
+  if (!t) { setLoading(false); return }
 
-    if (pts?.length) {
-      const userIds = pts.map(p => p.user_id)
-      const { data: profiles } = await supabase
-        .from('user_profiles')
-        .select('user_id, full_name, team_name, team_photo_url')
-        .in('user_id', userIds)
+  // 2. Global leaderboard — directly join user_tournament_points + user_profiles
+  const { data: lb } = await supabase
+    .from('user_tournament_points')
+    .select(`
+      user_id,
+      total_points,
+      matches_counted,
+      previous_rank,
+      user_profiles (
+        full_name,
+        team_name,
+        team_photo_url
+      )
+    `)
+    .eq('tournament_id', t.id)
+    .order('total_points', { ascending: false })
+    .limit(200)
+  
+  // Attach rank manually
+  setLeaderboard((lb || []).map((r, i) => ({ ...r, rank: i + 1 })))
 
-      const profileMap = {}
-      profiles?.forEach(p => { profileMap[p.user_id] = p })
+  // 3. Get leagues this user is in (leagues table uses invite_code not code)
+  const { data: lm } = await supabase
+    .from('league_members')
+    .select('league_id, leagues(id, name, invite_code)')
+    .eq('user_id', user.id)
+  setLeagues(lm?.map(m => m.leagues).filter(Boolean) || [])
 
-      setLeaderboard(pts.map(p => ({
-        ...p,
-        full_name: profileMap[p.user_id]?.full_name || 'User',
-        team_name: profileMap[p.user_id]?.team_name || '',
-        team_photo_url: profileMap[p.user_id]?.team_photo_url || null,
-      })))
-    } else {
-      setLeaderboard([])
-    }
-
-    // 3. Private leagues user is in
-    const { data: lm } = await supabase
-      .from('league_members')
-      .select('league_id')
-      .eq('user_id', user.id)
-
-    if (lm?.length) {
-      const leagueIds = lm.map(m => m.league_id)
-      const { data: leagueData } = await supabase
-        .from('leagues')
-        .select('id, name, invite_code')
-        .in('id', leagueIds)
-      setLeagues(leagueData || [])
-    } else {
-      setLeagues([])
-    }
-
-    setLoading(false)
-  }
+  setLoading(false)
+}
 
   const loadLeagueLeaderboard = async (leagueId) => {
-    setSelectedLeague(leagueId)
-    const { data } = await supabase
-      .from('private_league_leaderboard')
-      .select('*')
-      .eq('league_id', leagueId)
-      .order('rank_in_league')
-    setPrivateLeaderboard(data || [])
-  }
+  setSelectedLeague(leagueId)
+  setPrivateLeaderboard([])
+
+  // Get all members of this league
+  const { data: members } = await supabase
+    .from('league_members')
+    .select('user_id')
+    .eq('league_id', leagueId)
+
+  if (!members?.length) return
+
+  const userIds = members.map(m => m.user_id)
+
+  // Get their points for this tournament
+  const { data: pts } = await supabase
+    .from('user_tournament_points')
+    .select(`
+      user_id,
+      total_points,
+      user_profiles (
+        full_name,
+        team_name,
+        team_photo_url
+      )
+    `)
+    .eq('tournament_id', tournament.id)
+    .in('user_id', userIds)
+    .order('total_points', { ascending: false })
+
+  setPrivateLeaderboard((pts || []).map((r, i) => ({ ...r, rank_in_league: i + 1 })))
+}
 
   const medal = (i) => i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : null
 
@@ -110,14 +121,15 @@ export default function GlobalTournament({ user }) {
       </div>
       <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#2d2f3e', overflow: 'hidden', flexShrink: 0 }}>
         {row.team_photo_url && (
-          <img src={`${AVATAR_BASE}${row.team_photo_url}`} width={36} height={36}
+          <img src={`${AVATAR_BASE}${row.team_photo_url || row.user_profiles?.team_photo_url}`} width={36} height={36}
             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
             onError={e => e.target.style.display = 'none'} alt="" />
         )}
       </div>
       <div>
         <div style={{ fontSize: '13px', fontWeight: isMe ? 700 : 500, color: isMe ? '#6366f1' : 'white' }}>
-          {row.full_name || 'User'}
+{row.full_name || row.user_profiles?.full_name || 'User'}
+
           {isMe && <span style={{ fontSize: '10px', background: '#6366f1', color: 'white', padding: '1px 6px', borderRadius: '4px', marginLeft: '6px' }}>YOU</span>}
         </div>
         {row.team_name && <div style={{ fontSize: '11px', color: '#555', marginTop: '1px' }}>{row.team_name}</div>}
