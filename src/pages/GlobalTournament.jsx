@@ -42,14 +42,17 @@ export default function GlobalTournament({ user }) {
     const { data: t } = await supabase.from('global_tournaments').select('*').eq('slug', slug).single()
     setTournament(t)
     if (!t) { setLoading(false); return }
+    // t.tournament_id is the FK used by matches/players/teams/points
+    // t.id is the global_tournaments PK (only used for user_fantasy_teams)
     await Promise.all([fetchLeaderboard(t), fetchLeagues(t), fetchMyTeam(t), fetchNextMatch(t)])
     setLoading(false)
   }
 
   const fetchLeaderboard = async (t) => {
+    const tid = t.tournament_id || t.id
     const { data: pts } = await supabase.from('user_tournament_points')
       .select('user_id, total_points, matches_counted, previous_rank')
-      .eq('tournament_id', t.id).order('total_points', { ascending: false }).limit(300)
+      .eq('tournament_id', tid).order('total_points', { ascending: false }).limit(300)
     if (!pts?.length) return setLeaderboard([])
     const ids = pts.map(r => r.user_id)
     const { data: profiles } = await supabase.from('user_profiles').select('user_id, full_name, team_name, team_photo_url').in('user_id', ids)
@@ -63,14 +66,22 @@ export default function GlobalTournament({ user }) {
   }
 
   const fetchMyTeam = async (t) => {
-    const { data: ft } = await supabase.from('user_fantasy_teams').select('*').eq('tournament_id', t.id).eq('user_id', user.id).single()
+    const tid = t.tournament_id || t.id
+    // Try inner tournament_id first (used by ICC), fall back to global_tournaments.id (used by IPL)
+    let ft = null
+    const r1 = await supabase.from('user_fantasy_teams').select('*').eq('tournament_id', tid).eq('user_id', user.id).maybeSingle()
+    ft = r1.data
+    if (!ft && tid !== t.id) {
+      const r2 = await supabase.from('user_fantasy_teams').select('*').eq('tournament_id', t.id).eq('user_id', user.id).maybeSingle()
+      ft = r2.data
+    }
     if (!ft) return
     setMyTeam(ft)
     const { data: tp } = await supabase.from('user_fantasy_team_players').select('player_id, is_playing').eq('fantasy_team_id', ft.id)
     if (tp?.length) {
       const pids = tp.map(p => p.player_id)
       const { data: players } = await supabase.from('players').select('id, name, role, credit, photo_url, real_team_id').in('id', pids)
-      const { data: rts } = await supabase.from('real_teams').select('id, name, short_name').eq('tournament_id', t.id)
+      const { data: rts } = await supabase.from('real_teams').select('id, name, short_name').eq('tournament_id', t.tournament_id || t.id)
       const rtm = {}; rts?.forEach(r => rtm[r.id] = r)
       setMyTeamPlayers(tp.map(tp => ({ ...tp, ...players?.find(p => p.id === tp.player_id), team: rtm[players?.find(p => p.id === tp.player_id)?.real_team_id] })))
     }
@@ -78,14 +89,14 @@ export default function GlobalTournament({ user }) {
 
   const fetchNextMatch = async (t) => {
     const { data: m } = await supabase.from('matches').select('*, team_a:real_teams!matches_team_a_id_fkey(name, short_name), team_b:real_teams!matches_team_b_id_fkey(name, short_name)')
-      .eq('tournament_id', t.id).in('status', ['upcoming', 'live']).order('original_start_time').limit(1).single()
+      .eq('tournament_id', t.tournament_id || t.id).in('status', ['upcoming', 'live']).order('original_start_time').limit(1).single()
     setNextMatch(m)
   }
 
   const fetchAllPlayers = async () => {
     if (allPlayers.length) return
-    const { data: players } = await supabase.from('players').select('*, real_teams(name, short_name)').eq('tournament_id', tournament.id).eq('is_active', true).order('credit', { ascending: false })
-    const { data: rts } = await supabase.from('real_teams').select('*').eq('tournament_id', tournament.id)
+    const { data: players } = await supabase.from('players').select('*, real_teams(name, short_name)').eq('tournament_id', tournament.tournament_id || tournament.id).eq('is_active', true).order('credit', { ascending: false })
+    const { data: rts } = await supabase.from('real_teams').select('*').eq('tournament_id', tournament.tournament_id || tournament.id)
     setAllPlayers(players || [])
     setRealTeams(rts || [])
   }
@@ -100,7 +111,7 @@ export default function GlobalTournament({ user }) {
     const { data: members } = await supabase.from('league_members').select('user_id').eq('league_id', lid)
     if (!members?.length) return
     const uids = members.map(m => m.user_id)
-    const { data: pts } = await supabase.from('user_tournament_points').select('user_id, total_points').eq('tournament_id', tournament.id).in('user_id', uids).order('total_points', { ascending: false })
+    const { data: pts } = await supabase.from('user_tournament_points').select('user_id, total_points').eq('tournament_id', tournament.tournament_id || tournament.id).in('user_id', uids).order('total_points', { ascending: false })
     if (!pts?.length) return
     const { data: profiles } = await supabase.from('user_profiles').select('user_id, full_name, team_name, team_photo_url').in('user_id', uids)
     const pm = {}; profiles?.forEach(p => pm[p.user_id] = p)
@@ -391,7 +402,7 @@ function PickTeamTab({ players, realTeams, config, myTeam, myTeamPlayers, userId
     try {
       // upsert fantasy team
       const { data: ft, error: fte } = await supabase.from('user_fantasy_teams').upsert({
-        user_id: userId, tournament_id: tournament.id, captain_id: captain, vice_captain_id: vc,
+        user_id: userId, tournament_id: tournament.tournament_id || tournament.id, captain_id: captain, vice_captain_id: vc,
         total_credits: usedCredits, updated_at: new Date().toISOString()
       }, { onConflict: 'user_id,tournament_id' }).select().single()
       if (fte) throw fte
