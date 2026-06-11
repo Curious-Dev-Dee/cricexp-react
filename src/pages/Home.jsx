@@ -23,7 +23,6 @@ export default function Home({ user }) {
     setProfile(p.data)
     setLoading(false)
   }
-
   if (loading) return <Loader />
 
   const allTournaments = [
@@ -54,6 +53,15 @@ export default function Home({ user }) {
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
       <NavBar user={user} onLogout={() => supabase.auth.signOut()} />
+      {profile?.is_ppl_admin && (
+        <div style={{ background: 'rgba(239,68,68,0.08)', borderBottom: '1px solid rgba(239,68,68,0.2)', padding: '8px 16px' }}>
+          <div style={{ maxWidth: 960, margin: '0 auto' }}>
+            <a href="/admin" style={{ fontSize: 12, color: 'var(--red)', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              ⚙️ Admin Panel →
+            </a>
+          </div>
+        </div>
+      )}
 
       {/* Hero greeting */}
       <div style={{ background: 'linear-gradient(135deg, var(--bg2) 0%, var(--bg) 100%)', borderBottom: '1px solid var(--border)', padding: '24px 16px' }}>
