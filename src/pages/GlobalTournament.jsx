@@ -89,7 +89,7 @@ export default function GlobalTournament({ user }) {
 
   const fetchNextMatch = async (t) => {
     const { data: m } = await supabase.from('matches').select('*, team_a:real_teams!matches_team_a_id_fkey(name, short_code), team_b:real_teams!matches_team_b_id_fkey(name, short_code)')
-      .eq('tournament_id', t.tournament_id || t.id).in('status', ['upcoming', 'live']).order('original_start_time').limit(1).single()
+      .eq('tournament_id', t.tournament_id || t.id).in('status', ['upcoming', 'live']).order('original_start_time').limit(1).maybeSingle()
     setNextMatch(m)
   }
 
