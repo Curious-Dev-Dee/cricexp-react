@@ -38,7 +38,7 @@ export default function LocalTournament({ user }) {
       supabase.from('local_teams').select('*'),
       supabase.from('ppl_points_table').select('*, local_teams(name, short_name)').order('group_name').order('position'),
       supabase.from('v_ppl_player_overall_stats').select('*').order('fantasy_points', { ascending: false }).limit(80),
-      supabase.from('ppl_overall_leaderboard').select('*, user_profiles(full_name, team_name, team_photo_url)').order('overall_rank').limit(100),
+      supabase.from('ppl_overall_leaderboard').select('*').order('overall_rank').limit(100),
     ])
     setTournament(t.data)
     setMatches(m.data || [])
@@ -63,7 +63,7 @@ export default function LocalTournament({ user }) {
   if (loading) return <Loader />
   if (!tournament) return <div style={{ padding: 40, textAlign: 'center', color: 'var(--text2)' }}>Tournament not found</div>
 
-  const myEntry = leaderboard.find(r => r.user_id === user.id) || leaderboard.find(r => r.user_profiles?.full_name === user.user_metadata?.full_name)
+  const myEntry = leaderboard.find(r => r.user_id === user.id) || leaderboard.find(r => r.full_name === user.user_metadata?.full_name)
 
   // Group matches
   const groupMatches = matches.filter(m => m.match_type === 'group' || m.match_type === 'league' || (!m.match_type || m.match_type === 'normal'))
@@ -405,18 +405,18 @@ function FantasyTab({ leaderboard, userId, myEntry }) {
         {leaderboard.length === 0
           ? <Empty icon="⭐" title="No fantasy data" text="Leaderboard will appear after Phase 1 closes" />
           : leaderboard.map((row, i) => {
-            const profile = row.user_profiles || {}
+            // profile fields are directly on row from view
             const isMe = row.user_id === userId
             return (
               <div key={row.user_id} style={{ display: 'grid', gridTemplateColumns: '48px 40px 1fr 65px 65px 80px', gap: 6, padding: '11px 14px', borderTop: '1px solid var(--border)', background: isMe ? 'rgba(245,158,11,0.05)' : 'transparent', alignItems: 'center' }}>
                 <div style={{ textAlign: 'center' }}><Medal rank={row.overall_rank} /></div>
-                <Avatar url={profile.team_photo_url} name={profile.full_name} size={32} base={AVATAR_BASE} />
+                <Avatar url={row.team_photo_url} name={row.full_name} size={32} base={AVATAR_BASE} />
                 <div>
                   <div style={{ fontSize: 13, fontWeight: isMe ? 700 : 500, color: isMe ? 'var(--amber)' : 'var(--text)' }}>
-                    {profile.full_name || row.full_name || 'User'}
+                    {row.full_name || 'User'}
                     {isMe && <span style={{ fontSize: 10, background: 'var(--amber)', color: '#0f0f0f', padding: '1px 5px', borderRadius: 4, marginLeft: 5, fontWeight: 700 }}>YOU</span>}
                   </div>
-                  {(profile.team_name || row.team_name) && <div style={{ fontSize: 11, color: 'var(--text3)' }}>{profile.team_name || row.team_name}</div>}
+                  {row.team_name && <div style={{ fontSize: 11, color: 'var(--text3)' }}>{row.team_name}</div>}
                 </div>
                 <span style={{ textAlign: 'right', fontSize: 12, color: 'var(--text2)', fontFamily: 'var(--mono)' }}>{parseFloat(row.group_a_points || 0).toFixed(0)}</span>
                 <span style={{ textAlign: 'right', fontSize: 12, color: 'var(--text2)', fontFamily: 'var(--mono)' }}>{parseFloat(row.group_b_points || 0).toFixed(0)}</span>
