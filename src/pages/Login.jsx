@@ -9,27 +9,42 @@ export default function Login() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+    <div style={{ minHeight:'100vh', background:'var(--bg-page)', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:20, position:'relative', overflow:'hidden' }}>
+      {/* Ambient glow */}
+      <div style={{ position:'absolute', top:'30%', left:'50%', transform:'translate(-50%,-50%)', width:600, height:600, borderRadius:'50%', background:'radial-gradient(circle, rgba(154,224,0,0.04) 0%, transparent 70%)', pointerEvents:'none' }} />
+
       {/* Logo */}
-      <div style={{ marginBottom: 48, textAlign: 'center' }}>
-        <div style={{ fontSize: 52, marginBottom: 12 }}>🏏</div>
-        <div style={{ fontSize: 28, fontWeight: 800, letterSpacing: '-1px', marginBottom: 6 }}>CricExp</div>
-        <div style={{ color: 'var(--text2)', fontSize: 14 }}>Fantasy Cricket · Season Long · Local & Global</div>
+      <div style={{ marginBottom:48, textAlign:'center', position:'relative', zIndex:1 }}>
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:10, marginBottom:16 }}>
+          <div style={{ width:10, height:10, borderRadius:'50%', background:'var(--accent)', animation:'pulseGlow 2.5s ease-in-out infinite' }} />
+          <span style={{ fontFamily:'var(--font-display)', fontSize:36, fontWeight:900, letterSpacing:'1px', textTransform:'uppercase', color:'var(--text-primary)' }}>
+            CricExp
+          </span>
+        </div>
+        <div style={{ color:'var(--text-faint)', fontSize:13, fontFamily:'var(--font-body)', letterSpacing:'0.5px' }}>
+          Fantasy Cricket · Season Long · Local & Global
+        </div>
       </div>
 
       {/* Card */}
-      <div style={{ background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 16, padding: '36px 32px', width: '100%', maxWidth: 380, textAlign: 'center' }}>
-        <div style={{ fontWeight: 700, fontSize: 18, marginBottom: 8 }}>Welcome back</div>
-        <div style={{ color: 'var(--text2)', fontSize: 13, marginBottom: 28 }}>Sign in to manage your fantasy teams</div>
+      <div style={{ background:'var(--bg-card)', border:'1px solid var(--border-card)', borderRadius:'var(--card-radius)', padding:'36px 32px', width:'100%', maxWidth:380, textAlign:'center', position:'relative', zIndex:1, boxShadow:'var(--shadow-lg)' }}>
+        {/* Top highlight */}
+        <div style={{ position:'absolute', top:0, left:0, right:0, height:1, background:'linear-gradient(90deg,transparent,rgba(255,255,255,0.08),transparent)' }} />
+        {/* Accent top bar */}
+        <div style={{ position:'absolute', top:0, left:0, right:0, height:2, background:'var(--accent)', borderRadius:'var(--card-radius) var(--card-radius) 0 0' }} />
+
+        <div style={{ fontFamily:'var(--font-display)', fontWeight:900, fontSize:22, textTransform:'uppercase', letterSpacing:'0.5px', marginBottom:6 }}>Welcome Back</div>
+        <div style={{ color:'var(--text-faint)', fontSize:13, marginBottom:28 }}>Sign in to manage your fantasy teams</div>
 
         <button onClick={handleGoogle} style={{
-          width: '100%', padding: '12px 20px', borderRadius: 10, border: '1px solid var(--border2)',
-          background: 'var(--bg3)', color: 'var(--text)', fontSize: 14, fontWeight: 600,
-          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-          transition: 'background 0.15s'
+          width:'100%', padding:'13px 20px', borderRadius:'var(--btn-radius)',
+          border:'1px solid var(--border-card)', background:'rgba(255,255,255,0.04)',
+          color:'var(--text-primary)', fontSize:14, fontFamily:'var(--font-body)', fontWeight:600,
+          display:'flex', alignItems:'center', justifyContent:'center', gap:10,
+          cursor:'pointer', transition:'all var(--dur-fast) var(--ease-out)'
         }}
-          onMouseOver={e => e.currentTarget.style.background = 'var(--border)'}
-          onMouseOut={e => e.currentTarget.style.background = 'var(--bg3)'}
+          onMouseOver={e => { e.currentTarget.style.background='rgba(255,255,255,0.08)'; e.currentTarget.style.borderColor='var(--border-accent)' }}
+          onMouseOut={e => { e.currentTarget.style.background='rgba(255,255,255,0.04)'; e.currentTarget.style.borderColor='var(--border-card)' }}
         >
           <svg width="18" height="18" viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -41,8 +56,8 @@ export default function Login() {
         </button>
       </div>
 
-      <div style={{ marginTop: 32, color: 'var(--text3)', fontSize: 12, textAlign: 'center' }}>
-        By continuing, you agree to CricExp's terms of service
+      <div style={{ marginTop:28, color:'var(--text-ghost)', fontSize:12, textAlign:'center', position:'relative', zIndex:1 }}>
+        By continuing you agree to CricExp's terms of service
       </div>
     </div>
   )

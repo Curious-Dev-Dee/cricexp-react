@@ -25,7 +25,7 @@ export default function Admin({ user }) {
   if (isAdmin === null) return <Loader text="Checking admin access..." />
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--bg-page)' }}>
       <NavBar back backTo="/" title="⚙️ CricExp Admin" subtitle="Match processing & tournament management" />
       <Tabs tabs={TABS} active={tab} onChange={setTab} accent="var(--red)" />
       <div style={{ maxWidth: 800, margin: '0 auto', padding: '24px 16px' }}>
@@ -162,8 +162,8 @@ function ProcessTab() {
             <button key={t.id} onClick={() => setSelectedTournament(t)} style={{
               padding: '8px 18px', borderRadius: 20, border: '1px solid',
               borderColor: selectedTournament?.id === t.id ? 'var(--accent)' : 'var(--border)',
-              background: selectedTournament?.id === t.id ? 'rgba(99,102,241,0.15)' : 'var(--bg3)',
-              color: selectedTournament?.id === t.id ? 'var(--accent)' : 'var(--text2)', fontSize: 13, fontWeight: selectedTournament?.id === t.id ? 700 : 400
+              background: selectedTournament?.id === t.id ? 'rgba(99,102,241,0.15)' : 'var(--bg-card-alt)',
+              color: selectedTournament?.id === t.id ? 'var(--accent)' : 'var(--text-dim)', fontSize: 13, fontWeight: selectedTournament?.id === t.id ? 700 : 400
             }}>{t.name}</button>
           ))}
         </div>
@@ -172,7 +172,7 @@ function ProcessTab() {
       {/* Match selector */}
       <Section title="2. Select Match">
         {matches.length === 0
-          ? <p style={{ color: 'var(--text2)', fontSize: 13 }}>No matches available yet for this tournament (matches past their start time appear here)</p>
+          ? <p style={{ color: 'var(--text-dim)', fontSize: 13 }}>No matches available yet for this tournament (matches past their start time appear here)</p>
           : <select value={selectedMatch?.id || ''} onChange={e => { const m = matches.find(x => x.id === e.target.value); setSelectedMatch(m); setAnalysis(null); setWinner(''); setPom('') }} style={selectStyle}>
               <option value="">— Choose Match —</option>
               {matches.map(m => (
@@ -190,7 +190,7 @@ function ProcessTab() {
           value={scoreboardJson}
           onChange={e => { setScoreboardJson(e.target.value); setAnalysis(null) }}
           placeholder={'Paste scorecard JSON here...\nSupports: raw array, {scoreboard:[]}, or {data:{scorecard:[]}} (API format)'}
-          style={{ ...inputStyle, height: 160, fontFamily: 'var(--mono)', fontSize: 12 }}
+          style={{ ...inputStyle, height: 160, fontFamily: 'var(--font-display)', fontSize: 12 }}
         />
         <button onClick={analyzeScoreboard} disabled={analyzing || !selectedMatch} style={{ ...btnStyle, marginTop: 8 }}>
           {analyzing ? 'Analyzing…' : '🔍 Analyze & Check Names'}
@@ -203,13 +203,13 @@ function ProcessTab() {
           <div style={{ display: 'flex', gap: 20, marginBottom: 14, flexWrap: 'wrap' }}>
             <Chip label="Rows" value={analysis.rows.length} />
             <Chip label="Matched" value={analysis.matched.length} color="var(--green)" />
-            <Chip label="Missing" value={analysis.missing.length} color={analysis.missing.length > 0 ? 'var(--red)' : 'var(--green)'} />
+            <Chip label="Missing" value={analysis.missing.length} color={analysis.missing.length > 0 ? 'var(--red)' : 'var(--accent)'} />
           </div>
 
           {analysis.missing.length > 0 && (
             <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 10, padding: '12px 16px', marginBottom: 14 }}>
               <div style={{ fontWeight: 700, color: 'var(--red)', marginBottom: 8, fontSize: 13 }}>❌ Names not found in DB:</div>
-              {analysis.missing.map((n, i) => <div key={i} style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--red)', marginBottom: 4 }}>• {n}</div>)}
+              {analysis.missing.map((n, i) => <div key={i} style={{ fontFamily: 'var(--font-display)', fontSize: 12, color: 'var(--red)', marginBottom: 4 }}>• {n}</div>)}
             </div>
           )}
 
@@ -255,7 +255,7 @@ function ProcessTab() {
 
       {/* Confirm button */}
       {canConfirm && (
-        <button onClick={process} disabled={processing} style={{ ...btnStyle, background: 'var(--green)', fontSize: 15, padding: '14px', marginTop: 8 }}>
+        <button onClick={process} disabled={processing} style={{ ...btnStyle, background: 'var(--accent)', fontSize: 15, padding: '14px', marginTop: 8 }}>
           {processing ? '⏳ Processing…' : '✅ Confirm & Process Points'}
         </button>
       )}
@@ -337,7 +337,7 @@ function DelayTab() {
 
       <Section title="Match">
         {matches.length === 0
-          ? <p style={{ color: 'var(--text2)', fontSize: 13 }}>No upcoming/locked matches found</p>
+          ? <p style={{ color: 'var(--text-dim)', fontSize: 13 }}>No upcoming/locked matches found</p>
           : <select value={selectedMatch?.id || ''} onChange={e => setSelectedMatch(matches.find(m => m.id === e.target.value) || null)} style={selectStyle}>
               <option value="">— Choose Match —</option>
               {matches.map(m => <option key={m.id} value={m.id}>M#{m.match_number}: {m.team_a?.short_code} vs {m.team_b?.short_code} [{m.status.toUpperCase()}]</option>)}
@@ -350,19 +350,19 @@ function DelayTab() {
           <Section title="Rain Delay — Reschedule">
             <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
               {[15, 30, 60, 120].map(m => (
-                <button key={m} onClick={() => addMinutes(m)} style={{ ...btnStyle, flex: 1, padding: '8px', fontSize: 12, background: 'var(--bg3)' }}>
+                <button key={m} onClick={() => addMinutes(m)} style={{ ...btnStyle, flex: 1, padding: '8px', fontSize: 12, background: 'var(--bg-card-alt)' }}>
                   +{m >= 60 ? `${m / 60}h` : `${m}m`}
                 </button>
               ))}
             </div>
             <input type="datetime-local" value={newTime} onChange={e => setNewTime(e.target.value)} style={{ ...inputStyle, marginBottom: 10 }} />
-            <button onClick={handleReset} disabled={loading || !newTime} style={{ ...btnStyle, background: 'var(--amber)' }}>
+            <button onClick={handleReset} disabled={loading || !newTime} style={{ ...btnStyle, background: 'var(--gold)' }}>
               🔄 Reset & Reopen Editing
             </button>
           </Section>
 
           <Section title="Abandon Match">
-            <div style={{ padding: '12px 16px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 10, marginBottom: 12, fontSize: 13, color: 'var(--text2)' }}>
+            <div style={{ padding: '12px 16px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 10, marginBottom: 12, fontSize: 13, color: 'var(--text-dim)' }}>
               Use this if the match was abandoned <strong>before the first ball</strong>. No fantasy points will be given to anyone.
             </div>
             <button onClick={handleAbandon} disabled={loading} style={{ ...btnStyle, background: 'var(--red)' }}>
@@ -408,7 +408,7 @@ function ConfigTab() {
   return (
     <div>
       <StatusBar status={status} />
-      <div style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: 10, padding: '12px 16px', marginBottom: 20, fontSize: 13, color: 'var(--text2)' }}>
+      <div style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: 10, padding: '12px 16px', marginBottom: 20, fontSize: 13, color: 'var(--text-dim)' }}>
         ⚠️ Edit carefully. Config controls team size, credits, phase rules, overseas limits, and format. Changes take effect immediately for all users.
       </div>
 
@@ -417,15 +417,15 @@ function ConfigTab() {
           {tournaments.map(t => (
             <button key={t.id} onClick={() => selectTournament(t)} style={{
               padding: '8px 18px', borderRadius: 20, border: '1px solid',
-              borderColor: selected?.id === t.id ? 'var(--amber)' : 'var(--border)',
-              background: selected?.id === t.id ? 'rgba(245,158,11,0.15)' : 'var(--bg3)',
-              color: selected?.id === t.id ? 'var(--amber)' : 'var(--text2)', fontSize: 13
+              borderColor: selected?.id === t.id ? 'var(--gold)' : 'var(--border)',
+              background: selected?.id === t.id ? 'rgba(245,158,11,0.15)' : 'var(--bg-card-alt)',
+              color: selected?.id === t.id ? 'var(--gold)' : 'var(--text-dim)', fontSize: 13
             }}>{t.name}</button>
           ))}
         </div>
         {selected && (
           <>
-            <div style={{ marginBottom: 12, fontSize: 12, color: 'var(--text2)', fontFamily: 'var(--mono)' }}>
+            <div style={{ marginBottom: 12, fontSize: 12, color: 'var(--text-dim)', fontFamily: 'var(--font-display)' }}>
               slug: {selected.slug} · status: {selected.status}
             </div>
 
@@ -444,7 +444,7 @@ function ConfigTab() {
             <textarea
               value={configJson}
               onChange={e => setConfigJson(e.target.value)}
-              style={{ ...inputStyle, height: 340, fontFamily: 'var(--mono)', fontSize: 12 }}
+              style={{ ...inputStyle, height: 340, fontFamily: 'var(--font-display)', fontSize: 12 }}
             />
             <button onClick={save} disabled={saving} style={{ ...btnStyle, background: 'var(--accent)', marginTop: 8 }}>
               {saving ? 'Saving…' : '💾 Save Config'}
@@ -455,11 +455,11 @@ function ConfigTab() {
 
       {/* Add new tournament guide */}
       <Section title="Adding a New Tournament">
-        <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.8 }}>
-          <div>1. Insert row in <code style={{ background: 'var(--bg3)', padding: '1px 5px', borderRadius: 4 }}>global_tournaments</code> with unique <code style={{ background: 'var(--bg3)', padding: '1px 5px', borderRadius: 4 }}>slug</code></div>
-          <div>2. Insert row in <code style={{ background: 'var(--bg3)', padding: '1px 5px', borderRadius: 4 }}>tournaments</code> table and link via <code style={{ background: 'var(--bg3)', padding: '1px 5px', borderRadius: 4 }}>tournament_id</code></div>
-          <div>3. Add teams to <code style={{ background: 'var(--bg3)', padding: '1px 5px', borderRadius: 4 }}>real_teams</code>, players to <code style={{ background: 'var(--bg3)', padding: '1px 5px', borderRadius: 4 }}>players</code>, matches to <code style={{ background: 'var(--bg3)', padding: '1px 5px', borderRadius: 4 }}>matches</code></div>
-          <div>4. Set <code style={{ background: 'var(--bg3)', padding: '1px 5px', borderRadius: 4 }}>is_visible = true</code> when ready — home page picks it up automatically</div>
+        <div style={{ fontSize: 13, color: 'var(--text-dim)', lineHeight: 1.8 }}>
+          <div>1. Insert row in <code style={{ background: 'var(--bg-card-alt)', padding: '1px 5px', borderRadius: 4 }}>global_tournaments</code> with unique <code style={{ background: 'var(--bg-card-alt)', padding: '1px 5px', borderRadius: 4 }}>slug</code></div>
+          <div>2. Insert row in <code style={{ background: 'var(--bg-card-alt)', padding: '1px 5px', borderRadius: 4 }}>tournaments</code> table and link via <code style={{ background: 'var(--bg-card-alt)', padding: '1px 5px', borderRadius: 4 }}>tournament_id</code></div>
+          <div>3. Add teams to <code style={{ background: 'var(--bg-card-alt)', padding: '1px 5px', borderRadius: 4 }}>real_teams</code>, players to <code style={{ background: 'var(--bg-card-alt)', padding: '1px 5px', borderRadius: 4 }}>players</code>, matches to <code style={{ background: 'var(--bg-card-alt)', padding: '1px 5px', borderRadius: 4 }}>matches</code></div>
+          <div>4. Set <code style={{ background: 'var(--bg-card-alt)', padding: '1px 5px', borderRadius: 4 }}>is_visible = true</code> when ready — home page picks it up automatically</div>
           <div>5. Update the lock edge function config for the new tournament's phase numbers</div>
         </div>
       </Section>
@@ -468,15 +468,15 @@ function ConfigTab() {
 }
 
 // ── HELPERS ──────────────────────────────────────────────────────────────────
-const selectStyle = { background: 'var(--bg3)', border: '1px solid var(--border2)', color: 'var(--text)', padding: '10px 12px', borderRadius: 8, fontSize: 13, width: '100%', outline: 'none' }
-const inputStyle = { background: 'var(--bg3)', border: '1px solid var(--border2)', color: 'var(--text)', padding: '10px 12px', borderRadius: 8, fontSize: 13, width: '100%', outline: 'none', resize: 'vertical', boxSizing: 'border-box' }
+const selectStyle = { background: 'var(--bg-card-alt)', border: '1px solid var(--border2)', color: 'var(--text-primary)', padding: '10px 12px', borderRadius: 8, fontSize: 13, width: '100%', outline: 'none' }
+const inputStyle = { background: 'var(--bg-card-alt)', border: '1px solid var(--border2)', color: 'var(--text-primary)', padding: '10px 12px', borderRadius: 8, fontSize: 13, width: '100%', outline: 'none', resize: 'vertical', boxSizing: 'border-box' }
 const btnStyle = { background: 'var(--accent)', color: 'white', border: 'none', padding: '11px 20px', borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: 'pointer', width: '100%' }
-const labelStyle = { fontSize: 13, fontWeight: 600, color: 'var(--text2)', display: 'block', marginBottom: 6, marginTop: 16 }
+const labelStyle = { fontSize: 13, fontWeight: 600, color: 'var(--text-dim)', display: 'block', marginBottom: 6, marginTop: 16 }
 
 function Section({ title, children }) {
   return (
-    <div style={{ background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 12, padding: '18px 20px', marginBottom: 16 }}>
-      <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text2)', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: 14 }}>{title}</div>
+    <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, padding: '18px 20px', marginBottom: 16 }}>
+      <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: 14 }}>{title}</div>
       {children}
     </div>
   )
@@ -484,8 +484,8 @@ function Section({ title, children }) {
 
 function StatusBar({ status }) {
   if (!status.msg) return null
-  const colors = { error: 'rgba(239,68,68,0.1)', success: 'rgba(34,197,94,0.1)', loading: 'rgba(59,130,246,0.1)', '': 'var(--bg3)' }
-  const textColors = { error: 'var(--red)', success: 'var(--green)', loading: 'var(--blue)', '': 'var(--text2)' }
+  const colors = { error: 'rgba(239,68,68,0.1)', success: 'rgba(34,197,94,0.1)', loading: 'rgba(59,130,246,0.1)', '': 'var(--bg-card-alt)' }
+  const textColors = { error: 'var(--red)', success: 'var(--accent)', loading: 'var(--blue)', '': 'var(--text-dim)' }
   return (
     <div style={{ padding: '12px 16px', borderRadius: 10, marginBottom: 16, background: colors[status.type], border: `1px solid ${textColors[status.type]}`, color: textColors[status.type], fontSize: 13, fontWeight: 500 }}>
       {status.msg}
@@ -495,18 +495,18 @@ function StatusBar({ status }) {
 
 function Chip({ label, value, color }) {
   return (
-    <div style={{ background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 8, padding: '6px 12px', textAlign: 'center' }}>
-      <div style={{ fontSize: 10, color: 'var(--text2)', marginBottom: 2 }}>{label}</div>
-      <div style={{ fontSize: 16, fontWeight: 700, color: color || 'var(--text)', fontFamily: 'var(--mono)' }}>{value}</div>
+    <div style={{ background: 'var(--bg-card-alt)', border: '1px solid var(--border)', borderRadius: 8, padding: '6px 12px', textAlign: 'center' }}>
+      <div style={{ fontSize: 10, color: 'var(--text-dim)', marginBottom: 2 }}>{label}</div>
+      <div style={{ fontSize: 16, fontWeight: 700, color: color || 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>{value}</div>
     </div>
   )
 }
 
 function QuickStat({ label, value }) {
   return (
-    <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 6, padding: '5px 10px', fontSize: 12 }}>
-      <span style={{ color: 'var(--text2)' }}>{label}: </span>
-      <span style={{ fontWeight: 700, fontFamily: 'var(--mono)' }}>{value}</span>
+    <div style={{ background: 'var(--bg-page)', border: '1px solid var(--border)', borderRadius: 6, padding: '5px 10px', fontSize: 12 }}>
+      <span style={{ color: 'var(--text-dim)' }}>{label}: </span>
+      <span style={{ fontWeight: 700, fontFamily: 'var(--font-display)' }}>{value}</span>
     </div>
   )
 }

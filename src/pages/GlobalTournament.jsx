@@ -119,7 +119,7 @@ export default function GlobalTournament({ user }) {
   }
 
   if (loading) return <Loader />
-  if (!tournament) return <div style={{ padding: 40, textAlign: 'center', color: 'var(--text2)' }}>Tournament not found</div>
+  if (!tournament) return <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-dim)' }}>Tournament not found</div>
 
   const isCompleted = tournament.status === 'completed'
   const tabs = isCompleted ? TABS_COMPLETED : TABS_ACTIVE
@@ -137,7 +137,7 @@ export default function GlobalTournament({ user }) {
   const subsLeft4 = subsPhase4 - subsUsed4
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--bg-page)' }}>
       <NavBar
         back
         backTo="/"
@@ -194,30 +194,30 @@ function LeaderboardTab({ leaderboard, userId, myRank, myEntry }) {
   return (
     <div>
       {myEntry && (
-        <div style={{ background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.25)', borderRadius: 12, padding: '16px 20px', marginBottom: 20, display: 'flex', gap: 24 }}>
+        <div style={{ background: 'rgba(154,224,0,0.06)', border: '1px solid var(--border-accent-strong)', borderRadius: 'var(--card-radius-sm)', padding: '16px 20px', marginBottom: 20, display: 'flex', gap: 24 }}>
           <Stat label="Your Rank" value={`#${myRank}`} color="var(--accent)" />
           <Stat label="Total Points" value={parseFloat(myEntry.total_points).toLocaleString()} color="var(--green)" />
           <Stat label="Matches" value={myEntry.matches_counted || '—'} />
         </div>
       )}
       <Card>
-        <div style={{ display: 'grid', gridTemplateColumns: '48px 40px 1fr 80px', gap: 8, padding: '10px 16px', background: 'var(--bg3)', fontSize: 11, color: 'var(--text2)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '48px 40px 1fr 80px', gap: 8, padding: '10px 16px', background: 'var(--bg-card-alt)', fontSize: 11, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
           <span>Rank</span><span></span><span>Player</span><span style={{ textAlign: 'right' }}>Points</span>
         </div>
         {leaderboard.length === 0
           ? <Empty icon="📊" title="No data yet" text="Leaderboard will appear after matches are processed" />
           : leaderboard.map((row, i) => (
-            <div key={row.user_id} style={{ display: 'grid', gridTemplateColumns: '48px 40px 1fr 80px', gap: 8, padding: '11px 16px', borderTop: '1px solid var(--border)', background: row.user_id === userId ? 'rgba(99,102,241,0.05)' : 'transparent', alignItems: 'center' }}>
+            <div key={row.user_id} style={{ display: 'grid', gridTemplateColumns: '48px 40px 1fr 80px', gap: 8, padding: '11px 16px', borderTop: '1px solid var(--border)', background: row.user_id === userId ? 'rgba(154,224,0,0.04)' : 'transparent', alignItems: 'center' }}>
               <div style={{ textAlign: 'center' }}><Medal rank={i + 1} /></div>
               <Avatar url={row.team_photo_url} name={row.full_name} size={32} base={AVATAR_BASE} />
               <div>
-                <div style={{ fontSize: 13, fontWeight: row.user_id === userId ? 700 : 500, color: row.user_id === userId ? 'var(--accent)' : 'var(--text)' }}>
+                <div style={{ fontSize: 13, fontWeight: row.user_id === userId ? 700 : 500, color: row.user_id === userId ? 'var(--accent)' : 'var(--text-primary)' }}>
                   {row.full_name || 'User'}
                   {row.user_id === userId && <span style={{ fontSize: 10, background: 'var(--accent)', color: 'white', padding: '1px 5px', borderRadius: 4, marginLeft: 6 }}>YOU</span>}
                 </div>
-                {row.team_name && <div style={{ fontSize: 11, color: 'var(--text3)' }}>{row.team_name}</div>}
+                {row.team_name && <div style={{ fontSize: 11, color: 'var(--text-faint)' }}>{row.team_name}</div>}
               </div>
-              <div style={{ textAlign: 'right', fontWeight: 700, color: 'var(--green)', fontFamily: 'var(--mono)', fontSize: 14 }}>
+              <div style={{ textAlign: 'right', fontWeight: 700, color: 'var(--accent)', fontFamily: 'var(--font-display)', fontSize: 14 }}>
                 {parseFloat(row.total_points || 0).toLocaleString()}
               </div>
             </div>
@@ -244,16 +244,16 @@ function MyTeamTab({ myTeam, players, phase, subsLeft2, subsLeft4, config }) {
       </div>
 
       {cap && (
-        <div style={{ marginBottom: 12, padding: '10px 14px', background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.2)', borderRadius: 10, display: 'flex', gap: 12, alignItems: 'center' }}>
+        <div style={{ marginBottom: 12, padding: '10px 14px', background: 'rgba(154,224,0,0.06)', border: '1px solid var(--border-accent)', borderRadius: 'var(--btn-radius)', display: 'flex', gap: 12, alignItems: 'center' }}>
           <div>
-            <div style={{ fontSize: 11, color: 'var(--text2)' }}>Captain (2x)</div>
+            <div style={{ fontSize: 11, color: 'var(--text-dim)' }}>Captain (2x)</div>
             <div style={{ fontWeight: 700 }}>{cap.name}</div>
           </div>
           {vc && (
             <>
               <div style={{ width: 1, height: 32, background: 'var(--border)' }} />
               <div>
-                <div style={{ fontSize: 11, color: 'var(--text2)' }}>Vice Captain (1.5x)</div>
+                <div style={{ fontSize: 11, color: 'var(--text-dim)' }}>Vice Captain (1.5x)</div>
                 <div style={{ fontWeight: 700 }}>{vc.name}</div>
               </div>
             </>
@@ -262,7 +262,7 @@ function MyTeamTab({ myTeam, players, phase, subsLeft2, subsLeft4, config }) {
       )}
 
       <Card>
-        <div style={{ display: 'grid', gridTemplateColumns: '40px 1fr 60px 60px', gap: 8, padding: '10px 16px', background: 'var(--bg3)', fontSize: 11, color: 'var(--text2)', textTransform: 'uppercase' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '40px 1fr 60px 60px', gap: 8, padding: '10px 16px', background: 'var(--bg-card-alt)', fontSize: 11, color: 'var(--text-dim)', textTransform: 'uppercase' }}>
           <span></span><span>Player</span><span style={{ textAlign: 'right' }}>Role</span><span style={{ textAlign: 'right' }}>Credits</span>
         </div>
         {players.map(p => {
@@ -275,12 +275,12 @@ function MyTeamTab({ myTeam, players, phase, subsLeft2, subsLeft4, config }) {
                 <div style={{ fontSize: 13, fontWeight: 500 }}>
                   {p.name}
                   {isCap && <span style={{ fontSize: 10, background: 'var(--accent)', color: 'white', padding: '1px 5px', borderRadius: 4, marginLeft: 6 }}>C</span>}
-                  {isVC && <span style={{ fontSize: 10, background: 'var(--text3)', color: 'white', padding: '1px 5px', borderRadius: 4, marginLeft: 4 }}>VC</span>}
+                  {isVC && <span style={{ fontSize: 10, background: 'var(--text-faint)', color: 'white', padding: '1px 5px', borderRadius: 4, marginLeft: 4 }}>VC</span>}
                 </div>
-                <div style={{ fontSize: 11, color: 'var(--text2)' }}>{p.team?.short_code || p.team?.name || ''}</div>
+                <div style={{ fontSize: 11, color: 'var(--text-dim)' }}>{p.team?.short_code || p.team?.name || ''}</div>
               </div>
               <div style={{ textAlign: 'right' }}><RoleChip role={p.role} /></div>
-              <div style={{ textAlign: 'right', fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--text2)' }}>{p.credit}</div>
+              <div style={{ textAlign: 'right', fontFamily: 'var(--font-display)', fontSize: 12, color: 'var(--text-dim)' }}>{p.credit}</div>
             </div>
           )
         })}
@@ -301,8 +301,8 @@ function NextMatchTab({ nextMatch, myTeam, config, subsLeft2, subsLeft4, phase }
       <Card style={{ marginBottom: 16 }}>
         <div style={{ padding: 20 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-            <span style={{ fontSize: 11, color: 'var(--text2)', textTransform: 'uppercase', letterSpacing: '1px' }}>Next Match · #{nextMatch.match_number}</span>
-            <span style={{ fontSize: 11, padding: '3px 8px', borderRadius: 20, background: nextMatch.status === 'live' ? 'rgba(239,68,68,0.15)' : 'var(--bg3)', color: nextMatch.status === 'live' ? 'var(--red)' : 'var(--text2)' }}>
+            <span style={{ fontSize: 11, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '1px' }}>Next Match · #{nextMatch.match_number}</span>
+            <span style={{ fontSize: 11, padding: '3px 8px', borderRadius: 20, background: nextMatch.status === 'live' ? 'rgba(239,68,68,0.15)' : 'var(--bg-card-alt)', color: nextMatch.status === 'live' ? 'var(--red)' : 'var(--text-dim)' }}>
               {nextMatch.status === 'live' ? '🔴 LIVE' : nextMatch.status}
             </span>
           </div>
@@ -311,19 +311,19 @@ function NextMatchTab({ nextMatch, myTeam, config, subsLeft2, subsLeft4, phase }
             <div style={{ textAlign: 'center', flex: 1 }}>
               <div style={{ fontSize: 20, marginBottom: 4 }}>🏏</div>
               <div style={{ fontWeight: 700 }}>{nextMatch.team_a?.name || 'TBA'}</div>
-              <div style={{ color: 'var(--text2)', fontSize: 12 }}>{nextMatch.team_a?.short_code}</div>
+              <div style={{ color: 'var(--text-dim)', fontSize: 12 }}>{nextMatch.team_a?.short_code}</div>
             </div>
-            <div style={{ color: 'var(--text2)', fontWeight: 700, fontSize: 18 }}>vs</div>
+            <div style={{ color: 'var(--text-dim)', fontWeight: 700, fontSize: 18 }}>vs</div>
             <div style={{ textAlign: 'center', flex: 1 }}>
               <div style={{ fontSize: 20, marginBottom: 4 }}>🏏</div>
               <div style={{ fontWeight: 700 }}>{nextMatch.team_b?.name || 'TBA'}</div>
-              <div style={{ color: 'var(--text2)', fontSize: 12 }}>{nextMatch.team_b?.short_code}</div>
+              <div style={{ color: 'var(--text-dim)', fontSize: 12 }}>{nextMatch.team_b?.short_code}</div>
             </div>
           </div>
 
-          {nextMatch.venue && <div style={{ textAlign: 'center', color: 'var(--text2)', fontSize: 12, marginBottom: 8 }}>📍 {nextMatch.venue}</div>}
+          {nextMatch.venue && <div style={{ textAlign: 'center', color: 'var(--text-dim)', fontSize: 12, marginBottom: 8 }}>📍 {nextMatch.venue}</div>}
           {nextMatch.original_start_time && (
-            <div style={{ textAlign: 'center', color: 'var(--text2)', fontSize: 12 }}>
+            <div style={{ textAlign: 'center', color: 'var(--text-dim)', fontSize: 12 }}>
               🕐 {new Date(nextMatch.original_start_time).toLocaleString()}
             </div>
           )}
@@ -334,10 +334,10 @@ function NextMatchTab({ nextMatch, myTeam, config, subsLeft2, subsLeft4, phase }
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <span style={{ fontSize: 16 }}>{isLocked ? '🔒' : '🔓'}</span>
             <div>
-              <div style={{ fontWeight: 600, fontSize: 13, color: isLocked ? 'var(--red)' : 'var(--green)' }}>
+              <div style={{ fontWeight: 600, fontSize: 13, color: isLocked ? 'var(--red)' : 'var(--accent)' }}>
                 {isLocked ? 'Team locked' : 'Team editable'}
               </div>
-              {lockTime && <div style={{ fontSize: 11, color: 'var(--text2)' }}>Deadline: {lockTime.toLocaleString()}</div>}
+              {lockTime && <div style={{ fontSize: 11, color: 'var(--text-dim)' }}>Deadline: {lockTime.toLocaleString()}</div>}
             </div>
           </div>
         </div>
@@ -350,9 +350,9 @@ function NextMatchTab({ nextMatch, myTeam, config, subsLeft2, subsLeft4, phase }
             <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 16 }}>Your Fantasy Status</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
               <InfoBox label="Current Phase" value={`Phase ${phase}`} />
-              <InfoBox label="Transfers Left (P2)" value={`${subsLeft2}`} color={subsLeft2 > 0 ? 'var(--green)' : 'var(--red)'} />
+              <InfoBox label="Transfers Left (P2)" value={`${subsLeft2}`} color={subsLeft2 > 0 ? 'var(--accent)' : 'var(--red)'} />
             </div>
-            <div style={{ marginTop: 12, padding: '10px 14px', background: 'var(--bg3)', borderRadius: 8, fontSize: 12, color: 'var(--text2)', lineHeight: 1.6 }}>
+            <div style={{ marginTop: 12, padding: '10px 14px', background: 'var(--bg-card-alt)', borderRadius: 'var(--btn-radius)', fontSize: 12, color: 'var(--text-dim)', lineHeight: 1.6 }}>
               📋 <strong>Substitution Rules:</strong> You can make unlimited free transfers before Match 1. 
               After Match 1, each transfer costs a point from your Phase 2 budget ({config.phases?.find(p => p.phase === 2)?.subs_allotted || '—'} total). 
               A fresh free pick opens for the knockout stage.
@@ -420,21 +420,21 @@ function PickTeamTab({ players, realTeams, config, myTeam, myTeamPlayers, userId
   return (
     <div>
       {/* Summary bar */}
-      <div style={{ background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 12, padding: '14px 18px', marginBottom: 16, display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
+      <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-card)', borderRadius: 'var(--card-radius-sm)', padding: '14px 18px', marginBottom: 16, display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
         <div style={{ flex: 1 }}>
           <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-            <Stat label="Players" value={`${selected.size}/${maxSize}`} color={selected.size === maxSize ? 'var(--green)' : 'var(--text)'} />
-            <Stat label="Credits" value={`${usedCredits.toFixed(1)}/${maxCredits}`} color={usedCredits > maxCredits ? 'var(--red)' : 'var(--green)'} />
+            <Stat label="Players" value={`${selected.size}/${maxSize}`} color={selected.size === maxSize ? 'var(--accent)' : 'var(--text-primary)'} />
+            <Stat label="Credits" value={`${usedCredits.toFixed(1)}/${maxCredits}`} color={usedCredits > maxCredits ? 'var(--red)' : 'var(--accent)'} />
             <Stat label="WK" value={`${counts.WK}/${minWk}`} />
             <Stat label="BAT" value={`${counts.BAT}/${minBat}`} />
             <Stat label="BOWL" value={`${counts.BOWL}/${minBowl}`} />
             <Stat label="AR" value={`${counts.AR}/${minAr}`} />
           </div>
-          {msg && <div style={{ fontSize: 12, marginTop: 8, color: msg.startsWith('✅') ? 'var(--green)' : 'var(--red)' }}>{msg}</div>}
+          {msg && <div style={{ fontSize: 12, marginTop: 8, color: msg.startsWith('✅') ? 'var(--accent)' : 'var(--red)' }}>{msg}</div>}
         </div>
         <button onClick={save} disabled={!valid || saving} style={{
-          padding: '10px 22px', borderRadius: 10, border: 'none',
-          background: valid ? 'var(--accent)' : 'var(--bg3)', color: valid ? 'white' : 'var(--text3)',
+          padding: '10px 22px', borderRadius: 'var(--btn-radius)', border: 'none',
+          background: valid ? 'var(--accent)' : 'var(--bg-card-alt)', color: valid ? 'white' : 'var(--text-faint)',
           fontWeight: 700, fontSize: 13, flexShrink: 0
         }}>
           {saving ? 'Saving…' : '💾 Save Team'}
@@ -443,12 +443,12 @@ function PickTeamTab({ players, realTeams, config, myTeam, myTeamPlayers, userId
 
       {/* Filters */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 14, flexWrap: 'wrap' }}>
-        <select value={filterTeam} onChange={e => setFilterTeam(e.target.value)} style={{ background: 'var(--bg2)', border: '1px solid var(--border)', color: 'var(--text)', padding: '6px 10px', borderRadius: 8, fontSize: 13 }}>
+        <select value={filterTeam} onChange={e => setFilterTeam(e.target.value)} style={{ background: 'var(--bg-card)', border: '1px solid var(--border-card)', color: 'var(--text-primary)', padding: '6px 10px', borderRadius: 'var(--btn-radius)', fontSize: 13 }}>
           <option value="all">All Teams</option>
           {realTeams.map(rt => <option key={rt.id} value={rt.id}>{rt.short_code || rt.name}</option>)}
         </select>
         {['all', 'BAT', 'BOWL', 'AR', 'WK'].map(r => (
-          <button key={r} onClick={() => setFilterRole(r)} style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid', borderColor: filterRole === r ? 'var(--accent)' : 'var(--border)', background: filterRole === r ? 'rgba(99,102,241,0.15)' : 'var(--bg2)', color: filterRole === r ? 'var(--accent)' : 'var(--text2)', fontSize: 12 }}>
+          <button key={r} onClick={() => setFilterRole(r)} style={{ padding: '6px 14px', borderRadius: 'var(--btn-radius)', border: '1px solid', borderColor: filterRole === r ? 'var(--accent)' : 'var(--border)', background: filterRole === r ? 'rgba(154,224,0,0.12)' : 'var(--bg-card)', color: filterRole === r ? 'var(--accent)' : 'var(--text-dim)', fontSize: 12 }}>
             {r}
           </button>
         ))}
@@ -456,15 +456,15 @@ function PickTeamTab({ players, realTeams, config, myTeam, myTeamPlayers, userId
 
       {/* C/VC hint */}
       {selected.size > 0 && (
-        <div style={{ padding: '10px 14px', background: 'var(--bg3)', borderRadius: 8, marginBottom: 14, fontSize: 12, color: 'var(--text2)' }}>
-          Tap player name to select: <strong style={{ color: 'var(--accent)' }}>C (2x)</strong> or <strong style={{ color: 'var(--text2)' }}>VC (1.5x)</strong>. Currently: 
+        <div style={{ padding: '10px 14px', background: 'var(--bg-card-alt)', borderRadius: 'var(--btn-radius)', marginBottom: 14, fontSize: 12, color: 'var(--text-dim)' }}>
+          Tap player name to select: <strong style={{ color: 'var(--accent)' }}>C (2x)</strong> or <strong style={{ color: 'var(--text-dim)' }}>VC (1.5x)</strong>. Currently: 
           <strong style={{ color: 'var(--accent)', marginLeft: 6 }}>{players.find(p => p.id === captain)?.name || 'None'}</strong> (C) / 
-          <strong style={{ color: 'var(--text2)', marginLeft: 6 }}>{players.find(p => p.id === vc)?.name || 'None'}</strong> (VC)
+          <strong style={{ color: 'var(--text-dim)', marginLeft: 6 }}>{players.find(p => p.id === vc)?.name || 'None'}</strong> (VC)
         </div>
       )}
 
       <Card>
-        <div style={{ display: 'grid', gridTemplateColumns: '36px 1fr 50px 60px 50px', gap: 8, padding: '10px 14px', background: 'var(--bg3)', fontSize: 11, color: 'var(--text2)', textTransform: 'uppercase' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '36px 1fr 50px 60px 50px', gap: 8, padding: '10px 14px', background: 'var(--bg-card-alt)', fontSize: 11, color: 'var(--text-dim)', textTransform: 'uppercase' }}>
           <span></span><span>Player</span><span>Role</span><span style={{ textAlign: 'right' }}>Credits</span><span style={{ textAlign: 'right' }}>Pick</span>
         </div>
         {filtered.map(p => {
@@ -472,7 +472,7 @@ function PickTeamTab({ players, realTeams, config, myTeam, myTeamPlayers, userId
           const isCap = captain === p.id
           const isVC = vc === p.id
           return (
-            <div key={p.id} style={{ display: 'grid', gridTemplateColumns: '36px 1fr 50px 60px 50px', gap: 8, padding: '10px 14px', borderTop: '1px solid var(--border)', background: isSel ? 'rgba(99,102,241,0.05)' : 'transparent', alignItems: 'center' }}>
+            <div key={p.id} style={{ display: 'grid', gridTemplateColumns: '36px 1fr 50px 60px 50px', gap: 8, padding: '10px 14px', borderTop: '1px solid var(--border)', background: isSel ? 'rgba(154,224,0,0.04)' : 'transparent', alignItems: 'center' }}>
               <Avatar url={p.photo_url} name={p.name} size={28} base={PLAYER_BASE} />
               <div>
                 <button onClick={() => {
@@ -484,17 +484,17 @@ function PickTeamTab({ players, realTeams, config, myTeam, myTeamPlayers, userId
                   <div style={{ fontSize: 13, fontWeight: 500 }}>
                     {p.name}
                     {isCap && <span style={{ fontSize: 10, background: 'var(--accent)', color: 'white', padding: '1px 5px', borderRadius: 4, marginLeft: 5 }}>C</span>}
-                    {isVC && <span style={{ fontSize: 10, background: 'var(--bg3)', color: 'var(--text2)', padding: '1px 5px', borderRadius: 4, marginLeft: 4 }}>VC</span>}
+                    {isVC && <span style={{ fontSize: 10, background: 'var(--bg-card-alt)', color: 'var(--text-dim)', padding: '1px 5px', borderRadius: 4, marginLeft: 4 }}>VC</span>}
                   </div>
                 </button>
-                <div style={{ fontSize: 11, color: 'var(--text3)' }}>{p.real_teams?.short_code || p.real_teams?.name}</div>
+                <div style={{ fontSize: 11, color: 'var(--text-faint)' }}>{p.real_teams?.short_code || p.real_teams?.name}</div>
               </div>
               <div><RoleChip role={p.role} /></div>
-              <div style={{ textAlign: 'right', fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--text2)' }}>{p.credit}</div>
+              <div style={{ textAlign: 'right', fontFamily: 'var(--font-display)', fontSize: 12, color: 'var(--text-dim)' }}>{p.credit}</div>
               <div style={{ textAlign: 'right' }}>
                 <button onClick={() => toggle(p)} style={{
                   width: 28, height: 28, borderRadius: 6, border: `2px solid ${isSel ? 'var(--accent)' : 'var(--border)'}`,
-                  background: isSel ? 'var(--accent)' : 'var(--bg3)', color: 'white', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center'
+                  background: isSel ? 'var(--accent)' : 'var(--bg-card-alt)', color: 'white', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center'
                 }}>
                   {isSel ? '✓' : '+'}
                 </button>
@@ -520,9 +520,9 @@ function SubsTab({ players, realTeams, myTeam, myTeamPlayers, config, subsLeft2,
 
   return (
     <div>
-      <div style={{ background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 12, padding: '16px 20px', marginBottom: 20 }}>
+      <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-card)', borderRadius: 'var(--card-radius-sm)', padding: '16px 20px', marginBottom: 20 }}>
         <div style={{ fontWeight: 700, marginBottom: 8 }}>📋 Substitution Rules</div>
-        <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.7 }}>
+        <div style={{ fontSize: 13, color: 'var(--text-dim)', lineHeight: 1.7 }}>
           <div>• <strong>Phase 1:</strong> Before Match 1 — unlimited free changes</div>
           <div>• <strong>Phase 2:</strong> Group Stage — {config.phases?.find(p => p.phase === 2)?.subs_allotted || '—'} total transfers</div>
           <div>• <strong>Phase 3:</strong> After group stage — fresh free pick of 11</div>
@@ -530,11 +530,11 @@ function SubsTab({ players, realTeams, myTeam, myTeamPlayers, config, subsLeft2,
         </div>
       </div>
 
-      <div style={{ padding: '12px 16px', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: 10, marginBottom: 20 }}>
-        <div style={{ fontWeight: 600, color: 'var(--amber)', marginBottom: 4 }}>Current: {phaseInfo[phase]}</div>
+      <div style={{ padding: '12px 16px', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: 'var(--btn-radius)', marginBottom: 20 }}>
+        <div style={{ fontWeight: 600, color: 'var(--gold)', marginBottom: 4 }}>Current: {phaseInfo[phase]}</div>
         <div style={{ display: 'flex', gap: 20, marginTop: 8 }}>
-          <Stat label="Phase 2 Subs Left" value={`${subsLeft2}`} color={subsLeft2 > 5 ? 'var(--green)' : 'var(--red)'} />
-          <Stat label="Phase 4 Subs Left" value={`${subsLeft4}`} color={subsLeft4 > 0 ? 'var(--green)' : 'var(--text3)'} />
+          <Stat label="Phase 2 Subs Left" value={`${subsLeft2}`} color={subsLeft2 > 5 ? 'var(--accent)' : 'var(--red)'} />
+          <Stat label="Phase 4 Subs Left" value={`${subsLeft4}`} color={subsLeft4 > 0 ? 'var(--accent)' : 'var(--text-faint)'} />
           <Stat label="Reward Subs" value={myTeam.reward_subs || 0} color="var(--purple)" />
         </div>
       </div>
@@ -548,16 +548,16 @@ function SubsTab({ players, realTeams, myTeam, myTeamPlayers, config, subsLeft2,
               <div style={{ fontSize: 13, fontWeight: 500 }}>
                 {p.name}
                 {p.player_id === myTeam.captain_id && <span style={{ fontSize: 10, background: 'var(--accent)', color: 'white', padding: '1px 5px', borderRadius: 4, marginLeft: 5 }}>C</span>}
-                {p.player_id === myTeam.vice_captain_id && <span style={{ fontSize: 10, background: 'var(--bg3)', color: 'var(--text2)', padding: '1px 5px', borderRadius: 4, marginLeft: 4 }}>VC</span>}
+                {p.player_id === myTeam.vice_captain_id && <span style={{ fontSize: 10, background: 'var(--bg-card-alt)', color: 'var(--text-dim)', padding: '1px 5px', borderRadius: 4, marginLeft: 4 }}>VC</span>}
               </div>
-              <div style={{ fontSize: 11, color: 'var(--text3)' }}>{p.team?.short_code || ''}</div>
+              <div style={{ fontSize: 11, color: 'var(--text-faint)' }}>{p.team?.short_code || ''}</div>
             </div>
             <RoleChip role={p.role} />
-            <div style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--text2)', width: 32, textAlign: 'right' }}>{p.credit}</div>
+            <div style={{ fontFamily: 'var(--font-display)', fontSize: 12, color: 'var(--text-dim)', width: 32, textAlign: 'right' }}>{p.credit}</div>
           </div>
         ))}
       </Card>
-      <div style={{ marginTop: 16, padding: '12px 16px', background: 'var(--bg3)', borderRadius: 10, fontSize: 12, color: 'var(--text2)' }}>
+      <div style={{ marginTop: 16, padding: '12px 16px', background: 'var(--bg-card-alt)', borderRadius: 'var(--btn-radius)', fontSize: 12, color: 'var(--text-dim)' }}>
         ℹ️ To make transfers, go to the Pick Team tab and save your updated XI. Each change during Phase 2/4 counts as one transfer.
       </div>
     </div>
@@ -578,21 +578,21 @@ function ScoutTab({ players, realTeams }) {
   return (
     <div>
       <div style={{ display: 'flex', gap: 8, marginBottom: 14, flexWrap: 'wrap' }}>
-        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search player..." style={{ flex: 1, minWidth: 160, background: 'var(--bg2)', border: '1px solid var(--border)', color: 'var(--text)', padding: '8px 12px', borderRadius: 8, fontSize: 13, outline: 'none' }} />
-        <select value={filterTeam} onChange={e => setFilterTeam(e.target.value)} style={{ background: 'var(--bg2)', border: '1px solid var(--border)', color: 'var(--text)', padding: '8px 10px', borderRadius: 8, fontSize: 13 }}>
+        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search player..." style={{ flex: 1, minWidth: 160, background: 'var(--bg-card)', border: '1px solid var(--border-card)', color: 'var(--text-primary)', padding: '8px 12px', borderRadius: 'var(--btn-radius)', fontSize: 13, outline: 'none' }} />
+        <select value={filterTeam} onChange={e => setFilterTeam(e.target.value)} style={{ background: 'var(--bg-card)', border: '1px solid var(--border-card)', color: 'var(--text-primary)', padding: '8px 10px', borderRadius: 'var(--btn-radius)', fontSize: 13 }}>
           <option value="all">All Teams</option>
           {realTeams.map(rt => <option key={rt.id} value={rt.id}>{rt.short_code}</option>)}
         </select>
-        <select value={filterRole} onChange={e => setFilterRole(e.target.value)} style={{ background: 'var(--bg2)', border: '1px solid var(--border)', color: 'var(--text)', padding: '8px 10px', borderRadius: 8, fontSize: 13 }}>
+        <select value={filterRole} onChange={e => setFilterRole(e.target.value)} style={{ background: 'var(--bg-card)', border: '1px solid var(--border-card)', color: 'var(--text-primary)', padding: '8px 10px', borderRadius: 'var(--btn-radius)', fontSize: 13 }}>
           <option value="all">All Roles</option>
           {['BAT', 'BOWL', 'AR', 'WK'].map(r => <option key={r} value={r}>{r}</option>)}
         </select>
-        <select value={sortBy} onChange={e => setSortBy(e.target.value)} style={{ background: 'var(--bg2)', border: '1px solid var(--border)', color: 'var(--text)', padding: '8px 10px', borderRadius: 8, fontSize: 13 }}>
+        <select value={sortBy} onChange={e => setSortBy(e.target.value)} style={{ background: 'var(--bg-card)', border: '1px solid var(--border-card)', color: 'var(--text-primary)', padding: '8px 10px', borderRadius: 'var(--btn-radius)', fontSize: 13 }}>
           <option value="credit">Sort: Credits</option>
         </select>
       </div>
       <Card>
-        <div style={{ display: 'grid', gridTemplateColumns: '36px 1fr 50px 60px', gap: 8, padding: '10px 14px', background: 'var(--bg3)', fontSize: 11, color: 'var(--text2)', textTransform: 'uppercase' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '36px 1fr 50px 60px', gap: 8, padding: '10px 14px', background: 'var(--bg-card-alt)', fontSize: 11, color: 'var(--text-dim)', textTransform: 'uppercase' }}>
           <span></span><span>Player</span><span>Role</span><span style={{ textAlign: 'right' }}>Credits</span>
         </div>
         {sorted.slice(0, 80).map(p => (
@@ -600,10 +600,10 @@ function ScoutTab({ players, realTeams }) {
             <Avatar url={p.photo_url} name={p.name} size={28} base={PLAYER_BASE} />
             <div>
               <div style={{ fontSize: 13, fontWeight: 500 }}>{p.name}</div>
-              <div style={{ fontSize: 11, color: 'var(--text3)' }}>{p.real_teams?.short_code || p.real_teams?.name}</div>
+              <div style={{ fontSize: 11, color: 'var(--text-faint)' }}>{p.real_teams?.short_code || p.real_teams?.name}</div>
             </div>
             <div><RoleChip role={p.role} /></div>
-            <div style={{ textAlign: 'right', fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--text2)' }}>{p.credit}</div>
+            <div style={{ textAlign: 'right', fontFamily: 'var(--font-display)', fontSize: 12, color: 'var(--text-dim)' }}>{p.credit}</div>
           </div>
         ))}
       </Card>
@@ -624,8 +624,8 @@ function LeaguesTab({ leagues, selectedLeague, leagueBoard, onSelect, userId, to
               <button key={l.id} onClick={() => onSelect(l.id)} style={{
                 padding: '8px 18px', borderRadius: 20, border: '1px solid',
                 borderColor: selectedLeague === l.id ? 'var(--accent)' : 'var(--border)',
-                background: selectedLeague === l.id ? 'rgba(99,102,241,0.15)' : 'var(--bg2)',
-                color: selectedLeague === l.id ? 'var(--accent)' : 'var(--text2)', fontSize: 13, fontWeight: selectedLeague === l.id ? 600 : 400
+                background: selectedLeague === l.id ? 'rgba(154,224,0,0.12)' : 'var(--bg-card)',
+                color: selectedLeague === l.id ? 'var(--accent)' : 'var(--text-dim)', fontSize: 13, fontWeight: selectedLeague === l.id ? 600 : 400
               }}>
                 {l.name}
               </button>
@@ -634,23 +634,23 @@ function LeaguesTab({ leagues, selectedLeague, leagueBoard, onSelect, userId, to
 
           {selectedLeague && (
             <Card>
-              <div style={{ display: 'grid', gridTemplateColumns: '48px 40px 1fr 80px', gap: 8, padding: '10px 16px', background: 'var(--bg3)', fontSize: 11, color: 'var(--text2)', textTransform: 'uppercase' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '48px 40px 1fr 80px', gap: 8, padding: '10px 16px', background: 'var(--bg-card-alt)', fontSize: 11, color: 'var(--text-dim)', textTransform: 'uppercase' }}>
                 <span>Rank</span><span></span><span>Player</span><span style={{ textAlign: 'right' }}>Points</span>
               </div>
               {leagueBoard.length === 0
                 ? <Empty icon="📊" title="No data" text="No points recorded for this league yet" />
                 : leagueBoard.map((row, i) => (
-                  <div key={row.user_id} style={{ display: 'grid', gridTemplateColumns: '48px 40px 1fr 80px', gap: 8, padding: '11px 16px', borderTop: '1px solid var(--border)', background: row.user_id === userId ? 'rgba(99,102,241,0.05)' : 'transparent', alignItems: 'center' }}>
+                  <div key={row.user_id} style={{ display: 'grid', gridTemplateColumns: '48px 40px 1fr 80px', gap: 8, padding: '11px 16px', borderTop: '1px solid var(--border)', background: row.user_id === userId ? 'rgba(154,224,0,0.04)' : 'transparent', alignItems: 'center' }}>
                     <div style={{ textAlign: 'center' }}><Medal rank={i + 1} /></div>
                     <Avatar url={row.team_photo_url} name={row.full_name} size={32} base={AVATAR_BASE} />
                     <div>
-                      <div style={{ fontSize: 13, fontWeight: row.user_id === userId ? 700 : 500, color: row.user_id === userId ? 'var(--accent)' : 'var(--text)' }}>
+                      <div style={{ fontSize: 13, fontWeight: row.user_id === userId ? 700 : 500, color: row.user_id === userId ? 'var(--accent)' : 'var(--text-primary)' }}>
                         {row.full_name}
                         {row.user_id === userId && <span style={{ fontSize: 10, background: 'var(--accent)', color: 'white', padding: '1px 5px', borderRadius: 4, marginLeft: 5 }}>YOU</span>}
                       </div>
-                      {row.team_name && <div style={{ fontSize: 11, color: 'var(--text3)' }}>{row.team_name}</div>}
+                      {row.team_name && <div style={{ fontSize: 11, color: 'var(--text-faint)' }}>{row.team_name}</div>}
                     </div>
-                    <div style={{ textAlign: 'right', fontWeight: 700, color: 'var(--green)', fontFamily: 'var(--mono)', fontSize: 14 }}>
+                    <div style={{ textAlign: 'right', fontWeight: 700, color: 'var(--accent)', fontFamily: 'var(--font-display)', fontSize: 14 }}>
                       {parseFloat(row.total_points || 0).toLocaleString()}
                     </div>
                   </div>
@@ -670,17 +670,17 @@ function LeaguesTab({ leagues, selectedLeague, leagueBoard, onSelect, userId, to
 function Stat({ label, value, color }) {
   return (
     <div>
-      <div style={{ fontSize: 10, color: 'var(--text2)', marginBottom: 2 }}>{label}</div>
-      <div style={{ fontSize: 16, fontWeight: 700, color: color || 'var(--text)', fontFamily: 'var(--mono)' }}>{value}</div>
+      <div style={{ fontSize: 10, color: 'var(--text-dim)', marginBottom: 2 }}>{label}</div>
+      <div style={{ fontSize: 16, fontFamily: 'var(--font-display)', fontWeight: 700, color: color || 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>{value}</div>
     </div>
   )
 }
 
 function InfoBox({ label, value, color }) {
   return (
-    <div style={{ background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 10, padding: '12px 16px', textAlign: 'center' }}>
-      <div style={{ fontSize: 11, color: 'var(--text2)', marginBottom: 4 }}>{label}</div>
-      <div style={{ fontSize: 15, fontWeight: 700, color: color || 'var(--text)', fontFamily: 'var(--mono)' }}>{value}</div>
+    <div style={{ background: 'var(--bg-card-alt)', border: '1px solid var(--border-card)', borderRadius: 'var(--btn-radius)', padding: '12px 16px', textAlign: 'center' }}>
+      <div style={{ fontSize: 11, color: 'var(--text-dim)', marginBottom: 4 }}>{label}</div>
+      <div style={{ fontSize: 15, fontFamily: 'var(--font-display)', fontWeight: 700, color: color || 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>{value}</div>
     </div>
   )
 }
