@@ -81,21 +81,21 @@ export default function GlobalTournament({ user }) {
     if (tp?.length) {
       const pids = tp.map(p => p.player_id)
       const { data: players } = await supabase.from('players').select('id, name, role, credit, photo_url, real_team_id').in('id', pids)
-      const { data: rts } = await supabase.from('real_teams').select('id, name, short_name').eq('tournament_id', t.tournament_id || t.id)
+      const { data: rts } = await supabase.from('real_teams').select('id, name, short_code').eq('tournament_id', t.tournament_id || t.id)
       const rtm = {}; rts?.forEach(r => rtm[r.id] = r)
       setMyTeamPlayers(tp.map(tp => ({ ...tp, ...players?.find(p => p.id === tp.player_id), team: rtm[players?.find(p => p.id === tp.player_id)?.real_team_id] })))
     }
   }
 
   const fetchNextMatch = async (t) => {
-    const { data: m } = await supabase.from('matches').select('*, team_a:real_teams!matches_team_a_id_fkey(name, short_name), team_b:real_teams!matches_team_b_id_fkey(name, short_name)')
+    const { data: m } = await supabase.from('matches').select('*, team_a:real_teams!matches_team_a_id_fkey(name, short_code), team_b:real_teams!matches_team_b_id_fkey(name, short_code)')
       .eq('tournament_id', t.tournament_id || t.id).in('status', ['upcoming', 'live']).order('original_start_time').limit(1).single()
     setNextMatch(m)
   }
 
   const fetchAllPlayers = async () => {
     if (allPlayers.length) return
-    const { data: players } = await supabase.from('players').select('*, real_teams(name, short_name)').eq('tournament_id', tournament.tournament_id || tournament.id).eq('is_active', true).order('credit', { ascending: false })
+    const { data: players } = await supabase.from('players').select('*, real_teams(name, short_code)').eq('tournament_id', tournament.tournament_id || tournament.id).eq('is_active', true).order('credit', { ascending: false })
     const { data: rts } = await supabase.from('real_teams').select('*').eq('tournament_id', tournament.tournament_id || tournament.id)
     setAllPlayers(players || [])
     setRealTeams(rts || [])
@@ -277,7 +277,7 @@ function MyTeamTab({ myTeam, players, phase, subsLeft2, subsLeft4, config }) {
                   {isCap && <span style={{ fontSize: 10, background: 'var(--accent)', color: 'white', padding: '1px 5px', borderRadius: 4, marginLeft: 6 }}>C</span>}
                   {isVC && <span style={{ fontSize: 10, background: 'var(--text3)', color: 'white', padding: '1px 5px', borderRadius: 4, marginLeft: 4 }}>VC</span>}
                 </div>
-                <div style={{ fontSize: 11, color: 'var(--text2)' }}>{p.team?.short_name || p.team?.name || ''}</div>
+                <div style={{ fontSize: 11, color: 'var(--text2)' }}>{p.team?.short_code || p.team?.name || ''}</div>
               </div>
               <div style={{ textAlign: 'right' }}><RoleChip role={p.role} /></div>
               <div style={{ textAlign: 'right', fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--text2)' }}>{p.credit}</div>
@@ -311,13 +311,13 @@ function NextMatchTab({ nextMatch, myTeam, config, subsLeft2, subsLeft4, phase }
             <div style={{ textAlign: 'center', flex: 1 }}>
               <div style={{ fontSize: 20, marginBottom: 4 }}>🏏</div>
               <div style={{ fontWeight: 700 }}>{nextMatch.team_a?.name || 'TBA'}</div>
-              <div style={{ color: 'var(--text2)', fontSize: 12 }}>{nextMatch.team_a?.short_name}</div>
+              <div style={{ color: 'var(--text2)', fontSize: 12 }}>{nextMatch.team_a?.short_code}</div>
             </div>
             <div style={{ color: 'var(--text2)', fontWeight: 700, fontSize: 18 }}>vs</div>
             <div style={{ textAlign: 'center', flex: 1 }}>
               <div style={{ fontSize: 20, marginBottom: 4 }}>🏏</div>
               <div style={{ fontWeight: 700 }}>{nextMatch.team_b?.name || 'TBA'}</div>
-              <div style={{ color: 'var(--text2)', fontSize: 12 }}>{nextMatch.team_b?.short_name}</div>
+              <div style={{ color: 'var(--text2)', fontSize: 12 }}>{nextMatch.team_b?.short_code}</div>
             </div>
           </div>
 
@@ -445,7 +445,7 @@ function PickTeamTab({ players, realTeams, config, myTeam, myTeamPlayers, userId
       <div style={{ display: 'flex', gap: 8, marginBottom: 14, flexWrap: 'wrap' }}>
         <select value={filterTeam} onChange={e => setFilterTeam(e.target.value)} style={{ background: 'var(--bg2)', border: '1px solid var(--border)', color: 'var(--text)', padding: '6px 10px', borderRadius: 8, fontSize: 13 }}>
           <option value="all">All Teams</option>
-          {realTeams.map(rt => <option key={rt.id} value={rt.id}>{rt.short_name || rt.name}</option>)}
+          {realTeams.map(rt => <option key={rt.id} value={rt.id}>{rt.short_code || rt.name}</option>)}
         </select>
         {['all', 'BAT', 'BOWL', 'AR', 'WK'].map(r => (
           <button key={r} onClick={() => setFilterRole(r)} style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid', borderColor: filterRole === r ? 'var(--accent)' : 'var(--border)', background: filterRole === r ? 'rgba(99,102,241,0.15)' : 'var(--bg2)', color: filterRole === r ? 'var(--accent)' : 'var(--text2)', fontSize: 12 }}>
@@ -487,7 +487,7 @@ function PickTeamTab({ players, realTeams, config, myTeam, myTeamPlayers, userId
                     {isVC && <span style={{ fontSize: 10, background: 'var(--bg3)', color: 'var(--text2)', padding: '1px 5px', borderRadius: 4, marginLeft: 4 }}>VC</span>}
                   </div>
                 </button>
-                <div style={{ fontSize: 11, color: 'var(--text3)' }}>{p.real_teams?.short_name || p.real_teams?.name}</div>
+                <div style={{ fontSize: 11, color: 'var(--text3)' }}>{p.real_teams?.short_code || p.real_teams?.name}</div>
               </div>
               <div><RoleChip role={p.role} /></div>
               <div style={{ textAlign: 'right', fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--text2)' }}>{p.credit}</div>
@@ -550,7 +550,7 @@ function SubsTab({ players, realTeams, myTeam, myTeamPlayers, config, subsLeft2,
                 {p.player_id === myTeam.captain_id && <span style={{ fontSize: 10, background: 'var(--accent)', color: 'white', padding: '1px 5px', borderRadius: 4, marginLeft: 5 }}>C</span>}
                 {p.player_id === myTeam.vice_captain_id && <span style={{ fontSize: 10, background: 'var(--bg3)', color: 'var(--text2)', padding: '1px 5px', borderRadius: 4, marginLeft: 4 }}>VC</span>}
               </div>
-              <div style={{ fontSize: 11, color: 'var(--text3)' }}>{p.team?.short_name || ''}</div>
+              <div style={{ fontSize: 11, color: 'var(--text3)' }}>{p.team?.short_code || ''}</div>
             </div>
             <RoleChip role={p.role} />
             <div style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--text2)', width: 32, textAlign: 'right' }}>{p.credit}</div>
@@ -581,7 +581,7 @@ function ScoutTab({ players, realTeams }) {
         <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search player..." style={{ flex: 1, minWidth: 160, background: 'var(--bg2)', border: '1px solid var(--border)', color: 'var(--text)', padding: '8px 12px', borderRadius: 8, fontSize: 13, outline: 'none' }} />
         <select value={filterTeam} onChange={e => setFilterTeam(e.target.value)} style={{ background: 'var(--bg2)', border: '1px solid var(--border)', color: 'var(--text)', padding: '8px 10px', borderRadius: 8, fontSize: 13 }}>
           <option value="all">All Teams</option>
-          {realTeams.map(rt => <option key={rt.id} value={rt.id}>{rt.short_name}</option>)}
+          {realTeams.map(rt => <option key={rt.id} value={rt.id}>{rt.short_code}</option>)}
         </select>
         <select value={filterRole} onChange={e => setFilterRole(e.target.value)} style={{ background: 'var(--bg2)', border: '1px solid var(--border)', color: 'var(--text)', padding: '8px 10px', borderRadius: 8, fontSize: 13 }}>
           <option value="all">All Roles</option>
@@ -600,7 +600,7 @@ function ScoutTab({ players, realTeams }) {
             <Avatar url={p.photo_url} name={p.name} size={28} base={PLAYER_BASE} />
             <div>
               <div style={{ fontSize: 13, fontWeight: 500 }}>{p.name}</div>
-              <div style={{ fontSize: 11, color: 'var(--text3)' }}>{p.real_teams?.short_name || p.real_teams?.name}</div>
+              <div style={{ fontSize: 11, color: 'var(--text3)' }}>{p.real_teams?.short_code || p.real_teams?.name}</div>
             </div>
             <div><RoleChip role={p.role} /></div>
             <div style={{ textAlign: 'right', fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--text2)' }}>{p.credit}</div>
