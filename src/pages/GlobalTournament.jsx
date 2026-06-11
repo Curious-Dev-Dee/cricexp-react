@@ -77,7 +77,7 @@ export default function GlobalTournament({ user }) {
     }
     if (!ft) return
     setMyTeam(ft)
-    const { data: tp } = await supabase.from('user_fantasy_team_players').select('player_id, is_playing').eq('fantasy_team_id', ft.id)
+    const { data: tp } = await supabase.from('user_fantasy_team_players').select('player_id, position').eq('user_fantasy_team_id', ft.id)
     if (tp?.length) {
       const pids = tp.map(p => p.player_id)
       const { data: players } = await supabase.from('players').select('id, name, role, credit, photo_url, real_team_id').in('id', pids)
@@ -408,8 +408,8 @@ function PickTeamTab({ players, realTeams, config, myTeam, myTeamPlayers, userId
       if (fte) throw fte
 
       // delete old, insert new players
-      await supabase.from('user_fantasy_team_players').delete().eq('fantasy_team_id', ft.id)
-      await supabase.from('user_fantasy_team_players').insert([...selected].map(pid => ({ fantasy_team_id: ft.id, player_id: pid, is_playing: true })))
+      await supabase.from('user_fantasy_team_players').delete().eq('user_fantasy_team_id', ft.id)
+      await supabase.from('user_fantasy_team_players').insert([...selected].map(pid => ({ user_fantasy_team_id: ft.id, player_id: pid, position: null })))
       setMsg('✅ Team saved!'); onRefresh()
     } catch (e) { setMsg('❌ Error: ' + e.message) }
     setSaving(false)
