@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { NavBar, Badge, Card, Eyebrow, Skeleton } from '../components/Shared'
+import { Badge, Btn, Card, Eyebrow, NavBar, SectionHeader, Skeleton } from '../components/Shared'
 
 export default function Home({ user }) {
   const [global, setGlobal] = useState([])
@@ -10,157 +10,323 @@ export default function Home({ user }) {
   const [profile, setProfile] = useState(null)
   const navigate = useNavigate()
 
-  useEffect(() => { fetchAll() }, [])
+  useEffect(() => {
+    fetchAll()
+  }, [])
 
   const fetchAll = async () => {
     const [g, l, p] = await Promise.all([
       supabase.from('global_tournaments').select('*').eq('is_visible', true).order('start_date', { ascending: false }),
       supabase.from('local_tournaments').select('*').order('start_date', { ascending: false }),
-      supabase.from('user_profiles').select('*').eq('user_id', user.id).single()
+      supabase.from('user_profiles').select('*').eq('user_id', user.id).single(),
     ])
+
     setGlobal(g.data || [])
     setLocal(l.data || [])
     setProfile(p.data)
     setLoading(false)
   }
 
-  const all = [
-    ...( global.map(t => ({ ...t, kind:'global' })) ),
-    ...( local.map(t => ({ ...t, kind:'local' })) )
-  ]
-  const ongoing   = all.filter(t => t.status === 'active' || t.status === 'live')
-  const upcoming  = all.filter(t => t.status === 'upcoming')
-  const completed = all.filter(t => t.status === 'completed')
+  const stats = useMemo(() => {
+    const all = [...global.map((item) => ({ ...item, kind: 'global' })), ...local.map((item) => ({ ...item, kind: 'local' }))]
+    return {
+      active: all.filter((item) => item.status === 'active' || item.status === 'live').length,
+      upcoming: all.filter((item) => item.status === 'upcoming').length,
+      completed: all.filter((item) => item.status === 'completed').length,
+      fantasyReady: all.filter((item) => item.has_fantasy).length,
+    }
+  }, [global, local])
+
+  const activeGlobal = global.filter((item) => item.status === 'active' || item.status === 'live')
+  const activeLocal = local.filter((item) => item.status === 'active' || item.status === 'live')
+  const nextGlobal = global.filter((item) => item.status !== 'completed')
+  const nextLocal = local.filter((item) => item.status !== 'completed')
 
   return (
-    <div style={{ minHeight:'100vh', background:'var(--bg-page)' }}>
+    <div style={{ minHeight: '100vh' }}>
       <NavBar user={user} onLogout={() => supabase.auth.signOut()} />
 
-      {/* Admin strip */}
       {profile?.is_ppl_admin && (
-        <div style={{ background:'rgba(239,68,68,0.06)', borderBottom:'1px solid rgba(239,68,68,0.15)', padding:'8px 16px' }}>
-          <div style={{ maxWidth:'var(--app-max)', margin:'0 auto' }}>
-            <a href="/admin" style={{ fontSize:12, color:'var(--red)', fontFamily:'var(--font-display)', fontWeight:700, letterSpacing:'0.5px', display:'inline-flex', alignItems:'center', gap:6, textTransform:'uppercase' }}>
-              ⚙️ Admin Panel →
-            </a>
+        <div style={{ borderBottom: '1px solid rgba(255,93,115,0.16)', background: 'rgba(255,93,115,0.08)' }}>
+          <div className="shell" style={{ paddingTop: 10, paddingBottom: 10, display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+            <div style={{ color: 'var(--red)', fontWeight: 700 }}>Admin tools are enabled on this account.</div>
+            <Btn variant="danger" size="sm" onClick={() => navigate('/admin')}>
+              Open admin panel
+            </Btn>
           </div>
         </div>
       )}
 
-      {/* Hero greeting */}
-      <div style={{ background:'linear-gradient(180deg, var(--bg-card) 0%, var(--bg-page) 100%)', borderBottom:'1px solid var(--border)', padding:'28px 16px 24px' }}>
-        <div style={{ maxWidth:'var(--app-max)', margin:'0 auto' }}>
-          {loading ? (
-            <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
-              <Skeleton height={14} radius={6} style={{ width:100 }} />
-              <Skeleton height={28} radius={8} style={{ width:220 }} />
-            </div>
-          ) : (
-            <>
-              <Eyebrow>Welcome back</Eyebrow>
-              <div style={{ fontFamily:'var(--font-display)', fontSize:28, fontWeight:900, textTransform:'uppercase', letterSpacing:'0.5px', lineHeight:1.1 }}>
-                {profile?.full_name || user.user_metadata?.full_name || 'Champion'}
+      <section className="hero-shell">
+        <div className="hero-grid">
+          <Card accent topBar style={{ padding: 0 }}>
+            <div style={{ padding: '30px clamp(20px, 3vw, 34px)', display: 'grid', gap: 22 }}>
+              <div>
+                <Eyebrow>Season headquarters</Eyebrow>
+                <div className="headline-lg">
+                  {loading ? 'Loading your next move...' : `Welcome back, ${profile?.full_name || user.user_metadata?.full_name || 'Manager'}`}
+                </div>
+                <p style={{ color: 'var(--text-dim)', maxWidth: 720, marginTop: 12, lineHeight: 1.8 }}>
+                  Track season-long fantasy tournaments, monitor your local league ecosystem, and jump straight into the next decision that matters.
+                </p>
               </div>
-              {profile?.team_name && (
-                <div style={{ color:'var(--accent)', fontSize:13, marginTop:4, fontFamily:'var(--font-body)', fontWeight:600 }}>
-                  🏏 {profile.team_name}
+
+              {loading ? (
+                <div className="metric-grid">
+                  {[1, 2, 3, 4].map((item) => (
+                    <Skeleton key={item} height={102} radius={18} />
+                  ))}
+                </div>
+              ) : (
+                <div className="metric-grid">
+                  <InsightCard label="Live now" value={stats.active} accent="var(--accent)" text="Tournaments currently in motion" />
+                  <InsightCard label="Coming next" value={stats.upcoming} accent="var(--orange)" text="Upcoming competitions to prep for" />
+                  <InsightCard label="Fantasy ready" value={stats.fantasyReady} accent="var(--cyan)" text="Tournaments with season gameplay" />
+                  <InsightCard label="Completed" value={stats.completed} accent="var(--text-primary)" text="Past seasons with archived standings" />
                 </div>
               )}
-            </>
-          )}
-        </div>
-      </div>
 
-      <div style={{ maxWidth:'var(--app-max)', margin:'0 auto', padding:'28px 16px' }}>
+              <div className="chip-row">
+                <span className="chip">
+                  <span className="accent-dot" style={{ width: 6, height: 6, boxShadow: 'none' }} />
+                  Global fantasy manager
+                </span>
+                <span className="chip">
+                  <span className="cyan-dot" style={{ width: 6, height: 6, boxShadow: 'none' }} />
+                  Local live-scoring engine
+                </span>
+                {profile?.team_name && <span className="chip">{profile.team_name}</span>}
+              </div>
+            </div>
+          </Card>
+
+          <Card topBar style={{ padding: 0 }}>
+            <div style={{ padding: '28px 24px', display: 'grid', gap: 18 }}>
+              <div>
+                <Eyebrow>Continue your season</Eyebrow>
+                <div style={{ fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 34, lineHeight: 0.96, textTransform: 'uppercase' }}>
+                  What should you open next?
+                </div>
+              </div>
+
+              <QuickLink
+                title="Global fantasy tournaments"
+                text={activeGlobal.length ? `${activeGlobal.length} active right now` : `${nextGlobal.length} available to track`}
+                accent="var(--accent)"
+                onClick={() => {
+                  const target = activeGlobal[0] || nextGlobal[0]
+                  if (target) navigate(`/t/${target.slug}`)
+                }}
+                disabled={!nextGlobal.length}
+              />
+
+              <QuickLink
+                title="Local league control rooms"
+                text={activeLocal.length ? `${activeLocal.length} active live-scoring tournament${activeLocal.length > 1 ? 's' : ''}` : `${nextLocal.length} leagues available`}
+                accent="var(--cyan)"
+                onClick={() => {
+                  const target = activeLocal[0] || nextLocal[0]
+                  if (target) navigate(`/local/${target.id}`)
+                }}
+                disabled={!nextLocal.length}
+              />
+
+              <QuickLink
+                title="Fantasy leaderboards"
+                text="Jump straight into standings and season points"
+                accent="var(--gold)"
+                onClick={() => {
+                  const target = activeGlobal[0] || nextGlobal.find((item) => item.has_fantasy)
+                  if (target) navigate(`/t/${target.slug}?tab=leaderboard`)
+                }}
+                disabled={!nextGlobal.some((item) => item.has_fantasy)}
+              />
+            </div>
+          </Card>
+        </div>
+      </section>
+
+      <div className="page-content">
         {loading ? (
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(280px, 1fr))', gap:14 }}>
-            {[1,2,3].map(i => <Skeleton key={i} height={220} radius={18} />)}
+          <div className="split-cards">
+            {[1, 2, 3, 4].map((item) => (
+              <Skeleton key={item} height={240} radius={22} />
+            ))}
           </div>
         ) : (
-          <>
-            <TournamentSection title="🔴 Ongoing" items={ongoing} navigate={navigate} />
-            <TournamentSection title="🔜 Upcoming" items={upcoming} navigate={navigate} />
-            <TournamentSection title="✅ Completed" items={completed} navigate={navigate} />
-            {all.length === 0 && (
-              <div style={{ textAlign:'center', padding:'80px 20px', color:'var(--text-faint)' }}>
-                <div style={{ fontSize:40, marginBottom:12 }}>🏏</div>
-                <div style={{ fontFamily:'var(--font-display)', fontSize:18, fontWeight:800, textTransform:'uppercase' }}>No tournaments yet</div>
-              </div>
+          <div className="section-stack">
+            <TournamentSection
+              eyebrow="Global fantasy"
+              title="Season-long competitions"
+              subtitle="Premier leagues and ICC tournaments where users manage their squad over the whole campaign."
+              items={global}
+              kind="global"
+              navigate={navigate}
+            />
+
+            <TournamentSection
+              eyebrow="Local leagues"
+              title="Live scoring and stats hubs"
+              subtitle="Fixtures, scorecards, points table, NRR, player stats, and season-long fantasy for partnered tournaments."
+              items={local}
+              kind="local"
+              navigate={navigate}
+            />
+
+            {!global.length && !local.length && (
+              <Card style={{ padding: 0 }}>
+                <div style={{ padding: 48, textAlign: 'center' }}>
+                  <Eyebrow>No tournaments yet</Eyebrow>
+                  <div className="headline-lg" style={{ fontSize: 30 }}>
+                    Your dashboard will fill up as events go live.
+                  </div>
+                  <p style={{ color: 'var(--text-dim)', marginTop: 12 }}>Add tournaments in Supabase and CricExp will automatically surface them here.</p>
+                </div>
+              </Card>
             )}
-          </>
+          </div>
         )}
       </div>
     </div>
   )
 }
 
-function TournamentSection({ title, items, navigate }) {
+function TournamentSection({ eyebrow, title, subtitle, items, kind, navigate }) {
   if (!items.length) return null
+
+  const active = items.filter((item) => item.status === 'active' || item.status === 'live')
+  const upcoming = items.filter((item) => item.status === 'upcoming')
+  const completed = items.filter((item) => item.status === 'completed')
+
   return (
-    <div style={{ marginBottom:40 }}>
-      <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:18 }}>
-        <span style={{ fontFamily:'var(--font-display)', fontSize:11, fontWeight:800, color:'var(--text-faint)', textTransform:'uppercase', letterSpacing:'1.5px' }}>{title}</span>
-        <div style={{ flex:1, height:1, background:'var(--border)' }} />
-        <span style={{ fontFamily:'var(--font-display)', fontSize:11, color:'var(--text-ghost)', fontWeight:700 }}>{items.length}</span>
+    <section>
+      <SectionHeader
+        eyebrow={eyebrow}
+        title={title}
+        subtitle={subtitle}
+        action={
+          <div className="chip-row">
+            <span className="chip">{active.length} active</span>
+            <span className="chip">{upcoming.length} upcoming</span>
+            <span className="chip">{completed.length} completed</span>
+          </div>
+        }
+      />
+
+      <div className="split-cards">
+        {items.map((item) => (
+          <TournamentCard key={item.id} item={item} kind={kind} navigate={navigate} />
+        ))}
       </div>
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(300px, 1fr))', gap:14 }}>
-        {items.map(t => <TournamentCard key={t.id} t={t} navigate={navigate} />)}
-      </div>
-    </div>
+    </section>
   )
 }
 
-function TournamentCard({ t, navigate }) {
-  const isLocal  = t.kind === 'local'
-  const dest     = isLocal ? `/local/${t.id}` : `/t/${t.slug}`
-  const accentC  = isLocal ? 'var(--gold)' : 'var(--accent)'
-  const accentBg = isLocal ? 'rgba(245,158,11,0.12)' : 'rgba(154,224,0,0.12)'
-  const [hov, setHov] = useState(false)
+function TournamentCard({ item, kind, navigate }) {
+  const isLocal = kind === 'local'
+  const accent = isLocal ? 'var(--cyan)' : 'var(--accent)'
+  const actionPath = isLocal ? `/local/${item.id}` : `/t/${item.slug}`
+  const fantasyPath = isLocal ? `/local/${item.id}?tab=fantasy` : `/t/${item.slug}?tab=leaderboard`
+  const totalMatches = item.total_matches || item.match_count || '—'
 
   return (
-    <Card style={{ cursor:'pointer', transition:'border-color var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out)', borderColor: hov ? accentC : 'var(--border-card)', transform: hov ? 'translateY(-2px)' : 'none', boxShadow: hov ? `0 8px 24px rgba(0,0,0,0.4)` : 'none' }}
-      onClick={() => navigate(dest)}
-      onMouseEnter={() => setHov(true)}
-      onMouseLeave={() => setHov(false)}
+    <Card
+      topBar
+      style={{ cursor: 'pointer', height: '100%' }}
+      onClick={() => navigate(actionPath)}
     >
-      {/* Accent top bar on hover */}
-      <div style={{ position:'absolute', top:0, left:0, right:0, height:2, background:accentC, opacity: hov ? 1 : 0, transition:'opacity var(--dur-fast) var(--ease-out)', borderRadius:'var(--card-radius) var(--card-radius) 0 0' }} />
-
-      <div style={{ padding:'20px 20px 16px' }}>
-        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:16 }}>
-          <span style={{ fontSize:36 }}>{t.flag_emoji || (isLocal ? '🏏' : '🏆')}</span>
-          <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-end', gap:6 }}>
-            <Badge status={t.status} />
-            <span style={{ fontSize:10, color:'var(--text-ghost)', background:'var(--bg-card-alt)', padding:'2px 8px', borderRadius:4, fontFamily:'var(--font-display)', fontWeight:700, letterSpacing:'0.5px', textTransform:'uppercase' }}>
-              {isLocal ? '📍 Local' : '🌍 Global'}
-            </span>
+      <div style={{ padding: 22, display: 'grid', gap: 18, height: '100%' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, alignItems: 'flex-start' }}>
+          <div>
+            <Eyebrow>{isLocal ? 'Local tournament' : 'Global fantasy event'}</Eyebrow>
+            <div style={{ fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 28, lineHeight: 0.95, textTransform: 'uppercase' }}>
+              {item.name}
+            </div>
           </div>
+          <Badge status={item.status} />
         </div>
 
-        <div style={{ fontFamily:'var(--font-display)', fontWeight:900, fontSize:18, textTransform:'uppercase', letterSpacing:'0.3px', marginBottom:4, lineHeight:1.2 }}>{t.name}</div>
-        <div style={{ color:'var(--text-dim)', fontSize:12, marginBottom:12, fontFamily:'var(--font-body)' }}>
-          {t.season} · {t.format || 'T20'} · {t.total_matches} matches
-        </div>
-        <div style={{ color:'var(--text-ghost)', fontSize:11, marginBottom:16, fontFamily:'var(--font-display)', fontWeight:600, letterSpacing:'0.3px' }}>
-          {t.start_date} → {t.end_date}
+        <div className="chip-row">
+          <span className="chip">{item.season || item.short_name || 'Season'}</span>
+          <span className="chip">{item.format || 'T20'}</span>
+          <span className="chip">{totalMatches} matches</span>
         </div>
 
-        <div style={{ display:'flex', gap:8 }}>
-          <button
-            style={{ flex:1, background:'rgba(255,255,255,0.04)', border:'1px solid var(--border-card)', color:'var(--text-primary)', padding:'9px', borderRadius:'var(--btn-radius)', fontSize:12, fontFamily:'var(--font-display)', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.3px', cursor:'pointer' }}
-          >
-            View
-          </button>
-          {t.has_fantasy && (
-            <button
-              onClick={e => { e.stopPropagation(); navigate(isLocal ? `/local/${t.id}?tab=fantasy` : `/t/${t.slug}?tab=fantasy`) }}
-              style={{ flex:1, background: accentBg, border:`1px solid ${accentC}`, color: accentC, padding:'9px', borderRadius:'var(--btn-radius)', fontSize:12, fontFamily:'var(--font-display)', fontWeight:800, textTransform:'uppercase', letterSpacing:'0.3px', cursor:'pointer' }}
+        <div className="metric-grid" style={{ gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
+          <MiniMeta label="Starts" value={item.start_date || 'TBD'} accent={accent} />
+          <MiniMeta label="Ends" value={item.end_date || 'TBD'} accent={accent} />
+        </div>
+
+        <p style={{ color: 'var(--text-dim)', lineHeight: 1.75, flex: 1 }}>
+          {isLocal
+            ? 'Live fixtures, scorecards, points tables, player stats, and local fantasy standings built for serious tournament operations.'
+            : 'Manager-style season-long fantasy for marquee cricket events, with rankings, transfers, and deeper tournament context.'}
+        </p>
+
+        <div style={{ display: 'flex', gap: 10, marginTop: 'auto', flexWrap: 'wrap' }}>
+          <Btn variant="secondary" onClick={(event) => { event.stopPropagation(); navigate(actionPath) }}>
+            Open tournament
+          </Btn>
+          {item.has_fantasy && (
+            <Btn
+              variant="success"
+              onClick={(event) => {
+                event.stopPropagation()
+                navigate(fantasyPath)
+              }}
+              style={{ color: accent, borderColor: isLocal ? 'var(--cyan-mid)' : 'var(--border-accent)' }}
             >
-              ⭐ Fantasy
-            </button>
+              Open fantasy
+            </Btn>
           )}
         </div>
       </div>
     </Card>
+  )
+}
+
+function InsightCard({ label, value, accent, text }) {
+  return (
+    <div style={{ borderRadius: 'var(--card-radius-sm)', border: '1px solid var(--border-card)', background: 'rgba(255,255,255,0.03)', padding: 16 }}>
+      <Eyebrow>{label}</Eyebrow>
+      <div style={{ fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 34, lineHeight: 0.95, color: accent }}>{value}</div>
+      <div style={{ color: 'var(--text-dim)', fontSize: 13, marginTop: 8, lineHeight: 1.6 }}>{text}</div>
+    </div>
+  )
+}
+
+function MiniMeta({ label, value, accent }) {
+  return (
+    <div style={{ borderRadius: 'var(--card-radius-sm)', border: '1px solid var(--border-subtle)', background: 'rgba(255,255,255,0.02)', padding: '12px 14px' }}>
+      <div className="kicker" style={{ marginBottom: 6 }}>
+        {label}
+      </div>
+      <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 20, lineHeight: 1, color: accent }}>{value}</div>
+    </div>
+  )
+}
+
+function QuickLink({ title, text, accent, onClick, disabled }) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      style={{
+        width: '100%',
+        textAlign: 'left',
+        padding: '16px 18px',
+        borderRadius: 'var(--card-radius-sm)',
+        border: `1px solid ${disabled ? 'var(--border-subtle)' : 'var(--border-card)'}`,
+        background: disabled ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.04)',
+        color: disabled ? 'var(--text-faint)' : 'var(--text-primary)',
+        opacity: disabled ? 0.55 : 1,
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+        <div style={{ fontWeight: 700 }}>{title}</div>
+        <div style={{ fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 20, color: accent }}>→</div>
+      </div>
+      <div style={{ color: 'var(--text-dim)', fontSize: 13, marginTop: 6, lineHeight: 1.65 }}>{text}</div>
+    </button>
   )
 }
