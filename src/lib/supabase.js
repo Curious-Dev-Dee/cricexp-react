@@ -16,4 +16,4 @@ export const PLAYER_BASE = `${BASE}/player-photos/`
 
 // team logos/flags (team-logos bucket)
 export const TEAM_LOGO_BASE = `${BASE}/team-logos/`
-EOF
+
