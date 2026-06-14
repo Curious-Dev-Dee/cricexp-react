@@ -1,6 +1,7 @@
+
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
-import { supabase, AVATAR_BASE, PLAYER_BASE } from '../lib/supabase'
+import { supabase, AVATAR_BASE, PLAYER_BASE, TEAM_LOGO_BASE } from '../lib/supabase'
 import { Loader, Empty, RoleChip, Eyebrow, PtsPill } from '../components/Shared'
 
 // ── DESIGN TOKENS (Global = Electric Green — reads from CSS vars) ────────────
@@ -94,7 +95,7 @@ export default function GlobalTournament({ user }) {
   const fetchNextMatch = async (t) => {
     const tid = t.tournament_id || t.id
     const { data: m } = await supabase.from('matches')
-      .select('*, team_a:real_teams!team_a_id(name, short_code), team_b:real_teams!team_b_id(name, short_code)')
+      .select('*, team_a:real_teams!team_a_id(name, short_code, photo_name), team_b:real_teams!team_b_id(name, short_code, photo_name)')
       .eq('tournament_id', tid).in('status', ['upcoming', 'live']).order('original_start_time').limit(1).maybeSingle()
     setNextMatch(m)
   }
@@ -267,13 +268,19 @@ function NextMatchTab({ nextMatch, myTeam, config, subsLeft2, subsLeft4, phase, 
           </div>
           <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:20, marginBottom:20 }}>
             <div style={{ textAlign:'center', flex:1 }}>
-              <div style={{ fontSize:28, marginBottom:4 }}>🏏</div>
+              {nextMatch.team_a?.photo_name
+                ? <img src={`${TEAM_LOGO_BASE}${nextMatch.team_a.photo_name}`} alt={nextMatch.team_a.short_code} style={{ width:52, height:52, objectFit:'contain', margin:'0 auto 6px', filter:'drop-shadow(0 0 8px rgba(255,255,255,0.1))' }} onError={e=>e.target.style.display='none'} />
+                : <div style={{ fontSize:32, marginBottom:6 }}>🏏</div>
+              }
               <div style={{ fontFamily:'var(--font-display)', fontWeight:900, fontSize:18 }}>{nextMatch.team_a?.short_code || 'TBA'}</div>
               <div style={{ fontSize:11, color:'var(--text-faint)' }}>{nextMatch.team_a?.name}</div>
             </div>
             <div style={{ fontFamily:'var(--font-display)', fontWeight:900, fontSize:20, color:'var(--text-faint)' }}>VS</div>
             <div style={{ textAlign:'center', flex:1 }}>
-              <div style={{ fontSize:28, marginBottom:4 }}>🏏</div>
+              {nextMatch.team_b?.photo_name
+                ? <img src={`${TEAM_LOGO_BASE}${nextMatch.team_b.photo_name}`} alt={nextMatch.team_b.short_code} style={{ width:52, height:52, objectFit:'contain', margin:'0 auto 6px', filter:'drop-shadow(0 0 8px rgba(255,255,255,0.1))' }} onError={e=>e.target.style.display='none'} />
+                : <div style={{ fontSize:32, marginBottom:6 }}>🏏</div>
+              }
               <div style={{ fontFamily:'var(--font-display)', fontWeight:900, fontSize:18 }}>{nextMatch.team_b?.short_code || 'TBA'}</div>
               <div style={{ fontSize:11, color:'var(--text-faint)' }}>{nextMatch.team_b?.name}</div>
             </div>

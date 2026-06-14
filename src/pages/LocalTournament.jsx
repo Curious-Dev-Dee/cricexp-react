@@ -4,14 +4,14 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase, AVATAR_BASE, PLAYER_BASE } from '../lib/supabase'
 import { Loader, Empty, RoleChip, Eyebrow, PtsPill } from '../components/Shared'
 
-// ── DESIGN TOKENS (Local = Cyan) ─────────────────────────────────────────────
+// ── DESIGN TOKENS (Local = Cyan — reads from CSS vars) ───────────────────────
 const C = {
-  accent:       '#00f2ff',
-  accentDim:    'rgba(0,242,255,0.08)',
-  accentMid:    'rgba(0,242,255,0.16)',
-  accentBorder: 'rgba(0,242,255,0.20)',
+  accent:             'var(--cyan)',
+  accentDim:          'var(--cyan-dim)',
+  accentMid:          'rgba(0,242,255,0.16)',
+  accentBorder:       'rgba(0,242,255,0.20)',
   accentBorderStrong: 'rgba(0,242,255,0.35)',
-  accentGlow:   'rgba(0,242,255,0.20)',
+  accentGlow:         'rgba(0,242,255,0.20)',
 }
 
 const TABS = [

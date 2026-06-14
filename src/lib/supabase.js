@@ -1,4 +1,3 @@
-
 import { createClient } from '@supabase/supabase-js'
 
 const supabaseUrl = 'https://tuvqgcosbweljslbfgqc.supabase.co'
@@ -16,4 +15,3 @@ export const PLAYER_BASE = `${BASE}/player-photos/`
 
 // team logos/flags (team-logos bucket)
 export const TEAM_LOGO_BASE = `${BASE}/team-logos/`
-
