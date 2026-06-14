@@ -1,3 +1,4 @@
+
 import { createClient } from '@supabase/supabase-js'
 
 const supabaseUrl = 'https://tuvqgcosbweljslbfgqc.supabase.co'
@@ -5,5 +6,14 @@ const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 
 export const supabase = createClient(supabaseUrl, supabaseKey)
 
-export const AVATAR_BASE = 'https://tuvqgcosbweljslbfgqc.supabase.co/storage/v1/object/public/avatars/'
-export const PLAYER_BASE = 'https://tuvqgcosbweljslbfgqc.supabase.co/storage/v1/object/public/player-photos/'
+const BASE = 'https://tuvqgcosbweljslbfgqc.supabase.co/storage/v1/object/public'
+
+// user profile photos (team-avatars bucket)
+export const AVATAR_BASE = `${BASE}/team-avatars/`
+
+// cricket player photos (player-photos bucket)
+export const PLAYER_BASE = `${BASE}/player-photos/`
+
+// team logos/flags (team-logos bucket)
+export const TEAM_LOGO_BASE = `${BASE}/team-logos/`
+EOF

@@ -1,17 +1,16 @@
-
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase, AVATAR_BASE, PLAYER_BASE } from '../lib/supabase'
-import { Loader, Skeleton, Empty, RoleChip, Eyebrow, PtsPill, Btn } from '../components/Shared'
+import { Loader, Empty, RoleChip, Eyebrow, PtsPill } from '../components/Shared'
 
-// ── DESIGN TOKENS (Global = Electric Green) ─────────────────────────────────
+// ── DESIGN TOKENS (Global = Electric Green — reads from CSS vars) ────────────
 const G = {
-  accent:     '#9AE000',
-  accentDim:  'rgba(154,224,0,0.09)',
-  accentMid:  'rgba(154,224,0,0.18)',
-  accentGlow: 'rgba(154,224,0,0.28)',
-  accentBorder: 'rgba(154,224,0,0.20)',
-  accentBorderStrong: 'rgba(154,224,0,0.35)',
+  accent:             'var(--accent)',
+  accentDim:          'var(--accent-dim)',
+  accentMid:          'var(--accent-mid)',
+  accentGlow:         'var(--accent-glow)',
+  accentBorder:       'var(--border-accent)',
+  accentBorderStrong: 'var(--border-accent-strong)',
 }
 
 const TABS_COMPLETED = [
